@@ -243,7 +243,7 @@ const Map = ({ opacity, lat, lon, setLocationInfo, locationInfo }: MapInterface)
             )}
 
             {polygon && (
-                <Polygon coordinates={polygon} strokeColor="rgba(0, 0, 255, 0.9)" strokeWidth={3} geodesic={true} />
+                <Polygon style={{zIndex: 99999}} coordinates={polygon} strokeColor="rgba(0, 0, 255, 0.9)" strokeWidth={3} geodesic={true} />
             )}
         </MapView>
     );

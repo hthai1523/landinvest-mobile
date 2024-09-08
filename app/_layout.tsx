@@ -62,6 +62,7 @@ function RootLayoutNav() {
                         />
                         <Stack.Screen name="(modals)/auth" options={{ headerShown: false, presentation: 'card' }} />
                         <Stack.Screen name="(modals)/search" options={{ presentation: 'card', headerShown: false }} />
+                        <Stack.Screen name="(modals)/newPost" options={{ presentation: 'card', headerShown: false }} />
                     </Stack>
                 </SafeAreaProvider>
             </BottomSheetModalProvider>

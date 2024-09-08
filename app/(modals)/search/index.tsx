@@ -7,7 +7,10 @@ import axios from 'axios';
 import { PlaceResult } from '@/constants/interface';
 import { LinearProgress } from '@rneui/themed';
 import useSearchStore from '@/store/searchStore';
-import ContextMenu from "react-native-context-menu-view";
+import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
+import Map from '@/components/Map/Map';
+import MapPreview from '@/components/Map/MapPreview';
+import Modal from 'react-native-modal';
 
 const NOMINATIM_BASE_URL = 'https://nominatim.openstreetmap.org/search?';
 const params = {
@@ -23,10 +26,8 @@ const Search = () => {
 
     const [isLoading, setIsLoading] = useState(false);
     const [searchResult, setSearchResult] = useState<PlaceResult[]>([]);
-
-    useEffect(() => {
-        resetSearch();
-    }, [resetSearch]);
+    const [previewItem, setPreviewItem] = useState<PlaceResult | null>(null);
+    const [previewVisible, setPreviewVisible] = useState<boolean>(false);
 
     useEffect(() => {
         const handleGetData = async () => {
@@ -66,30 +67,30 @@ const Search = () => {
                 searchQuery: '',
             });
             router.push('/(tabs)');
+            resetSearch();
         },
         [doSetSearchResult],
     );
 
-    const handleLongPress = useCallback(() => {
-      console.log("hello")
-    }, [handleResultPress]);
+    const handleLongPress = useCallback((item: PlaceResult) => {
+        setPreviewItem(item);
+    }, []);
 
+    const closePreview = () => {
+        setPreviewItem(null);
+    };
     const renderSearchResult = useCallback(
         ({ item }: { item: PlaceResult }) => (
-            <ContextMenu
-                actions={[{ title: 'Title 1' }, { title: 'Title 2' }]}
-                onPress={(e) => {
-                    console.warn(`Pressed ${e.nativeEvent.name} at index ${e.nativeEvent.index}`);
-                }}
-            >
-                <TouchableOpacity
-                    style={{ flexDirection: 'row', alignItems: 'center' }}
+            <TouchableOpacity
+                className="py-3 px-6 mx-2 mt-2 rounded flex flex-row items-center space-x-2"
+                style={{ backgroundColor: Colors.primary.header }}
                 onPress={() => handleResultPress(item)}
+                onLongPress={() => handleLongPress(item)}
+                delayLongPress={500}
             >
                 <Feather name="map-pin" size={20} color="#fff" />
-                    <Text style={{ color: '#fff', marginLeft: 8 }}>{item.display_name}</Text>
+                <Text className="text-white">{item.display_name}</Text>
             </TouchableOpacity>
-            </ContextMenu>
         ),
         [handleResultPress],
     );
@@ -111,7 +112,7 @@ const Search = () => {
                 ) : (
                     <FlatList
                         data={searchResult}
-                        renderItem={renderSearchResult }
+                        renderItem={renderSearchResult}
                         keyExtractor={(item, index) => `${item.place_id}-${index}`}
                         style={{ paddingTop: 8, height: '100%' }}
                         keyboardDismissMode="on-drag"
@@ -123,6 +124,42 @@ const Search = () => {
                     />
                 )}
             </View>
+
+            {previewItem && (
+                <Modal
+                    hasBackdrop={true}
+                    backdropOpacity={0.6}
+                    // hideModalContentWhileAnimating={true}
+                    animationIn={'fadeInUp'}
+                    animationOut={'fadeOut'}
+                    // useNativeDriverForBackdrop={true}
+                    // useNativeDriver={true}
+                    // animationInTiming={1}
+                    // animationOutTiming={1}
+                    // backdropTransitionInTiming={1}
+                    // backdropTransitionOutTiming={1}
+                    isVisible={true}
+                    onBackdropPress={closePreview}
+                >
+                  
+                        <View
+                            style={{
+                                backgroundColor: 'white',
+                                padding: 5,
+                                borderRadius: 10,
+                                width: '100%',
+                                height: '50%',
+                            }}
+                        >
+                            <MapPreview
+                                opacity={1}
+                                lat={previewItem.lat}
+                                lon={previewItem.lon}
+                                coordinates={previewItem.geojson?.coordinates}
+                            />
+                        </View>
+                </Modal>
+            )}
         </SafeAreaView>
     );
 };

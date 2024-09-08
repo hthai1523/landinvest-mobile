@@ -19,6 +19,7 @@ export default {
   primary: {
     background: '#2c353d',
     green: '#4caf50',
-    header: '#1E252B'
+    header: '#1E252B',
+    danger: '#FD5454'
   }
 };
