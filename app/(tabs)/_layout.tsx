@@ -52,6 +52,7 @@ const TabLayout = () => {
                     tabBarActiveTintColor: '#fff',
                     tabBarInactiveTintColor: '#fff',
                     tabBarLabel: () => null,
+                
                 }}
             >
                 {['index', 'notify', 'group', 'auction', 'profile'].map((screen, index) => (
@@ -78,6 +79,7 @@ const TabLayout = () => {
                                     )}
                                     {screen === 'auction' && <AuctionIcon />}
                                     {screen === 'profile' && <FontAwesome5 name="user" size={size} color={color} />}
+                                    {screen === 'index' && <Animated.View style={[styles.indicator, indicatorStyle]} />}
                                 </View>
                             ),
                         }}
@@ -85,7 +87,6 @@ const TabLayout = () => {
                 ))}
             </Tabs>
 
-            <Animated.View style={[styles.indicator, indicatorStyle]} />
         </>
     );
 };
@@ -93,7 +94,7 @@ const TabLayout = () => {
 const styles = StyleSheet.create({
     indicator: {
         position: 'absolute',
-        top: -5,
+        bottom: 38,
         height: 4,
         backgroundColor: '#4caf50',
     },

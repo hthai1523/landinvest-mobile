@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
     View,
     Text,
@@ -8,40 +8,156 @@ import {
     TouchableOpacity,
     KeyboardAvoidingView,
     Platform,
+    Dimensions,
+    ViewStyle,
+    Alert,
 } from 'react-native';
 import Colors from '@/constants/Colors';
 import CustomImage from '@/components/ui/Image';
-import BottomSheet from '@gorhom/bottom-sheet';
-import { Ionicons } from '@expo/vector-icons'; // Assuming you're using expo or react-native-vector-icons
+import BottomSheet, { BottomSheetModal } from '@gorhom/bottom-sheet';
+import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
+import { usePostStore } from '@/store/postNewStore';
+
+const { width } = Dimensions.get('window');
+const imageMargin = 5;
 
 const Page = () => {
-    const bottomSheetRef = useRef(null);
-
-    // Snap points for bottom sheet
+    const bottomSheetRef = useRef<BottomSheetModal>(null);
     const snapPoints = useMemo(() => ['10%', '50%'], []);
-
-    // State to track the expanded/collapsed status of the bottom sheet
     const [isExpanded, setIsExpanded] = useState(false);
+    const [currentTag, setCurrentTag] = useState('#'); // Current tag being typed
+
+    const { value, images, setValue, addImage, removeImage, addTag, removeTag } = usePostStore();
 
     const handleSheetChanges = (index: number) => {
         setIsExpanded(index > 0);
     };
 
     const pickImage = async () => {
-        // No permissions request is necessary for launching the image library
-        let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.All,
-            allowsEditing: true,
-            aspect: [16,9],
-            quality: 1,
-        });
+        try {
+            let result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.All,
+                quality: 1,
+                allowsMultipleSelection: true,
+            });
 
-        console.log(result);
+            if (!result.canceled) {
+                const base64Images: string[] = await Promise.all(
+                    result.assets.map(async (asset) => {
+                        const base64 = await FileSystem.readAsStringAsync(asset.uri, {
+                            encoding: FileSystem.EncodingType.Base64,
+                        });
+                        return `data:image/jpeg;base64,${base64}`;
+                    }),
+                );
 
-        if (!result.canceled) {
-            console.log(result.assets[0].uri);
+                base64Images.forEach((image) => addImage(image));
+            }
+        } catch (error) {
+            console.error('Error picking images:', error);
         }
+    };
+
+    const handleTagInput = (text: string) => {
+        // Check if space is pressed
+        if (text.endsWith(' ')) {
+            const newTag = currentTag.trim();
+            if (newTag.length > 1) {
+                addTag(newTag); // Add the tag to store
+            }
+            setCurrentTag('#'); // Reset current tag to start with #
+        } else {
+            setCurrentTag(text); // Update tag input
+        }
+    };
+
+    const handleInputChange = (name: keyof typeof value, text: string) => {
+        setValue({
+            ...value,
+            [name]: text,
+        });
+    };
+
+    const handleRemoveTag = (index: number) => {
+        Alert.alert('Xóa tag này', '', [
+            {
+                text: 'Ok',
+                onPress: () => removeTag(index),
+            },
+            {
+                text: 'Hủy',
+                style: 'cancel',
+            },
+        ]);
+    };
+
+    const deleteImage = (index: number) => {
+        removeImage(index);
+    };
+
+    const renderTags = useCallback(() => {
+        return (
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap' }} className='space-x-1'>
+                {value.tags.map((tag, index) => (
+                    <TouchableOpacity
+                        onLongPress={() => handleRemoveTag(index)}
+                        delayLongPress={300}
+                        key={index}
+                        style={{
+                            backgroundColor: Colors.primary.background,
+                            borderRadius: 20,
+                            paddingVertical: 5,
+                            paddingHorizontal: 10,
+                        }}
+                    >
+                        <Text style={{ color: 'white' }}>{tag}</Text>
+                    </TouchableOpacity>
+                ))}
+            </View>
+        );
+    }, [value.tags]);
+
+    const renderImages = () => {
+        const imageCount = images.length;
+        let imageStyle: ViewStyle;
+        let containerStyle: ViewStyle;
+
+        if (imageCount === 1) {
+            imageStyle = { width: width - 20, height: width - 20, marginBottom: imageMargin };
+            containerStyle = { flexDirection: 'column' };
+        } else if (imageCount === 2) {
+            imageStyle = { width: (width - 25) / 2, height: (width - 25) / 2, marginBottom: imageMargin };
+            containerStyle = { flexDirection: 'row', justifyContent: 'space-between' };
+        } else {
+            const imageSize = (width - imageMargin * 4) / 3;
+            imageStyle = { width: imageSize, height: imageSize, marginBottom: imageMargin };
+            containerStyle = { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-start' };
+        }
+
+        return (
+            <View style={containerStyle}>
+                {images.map((image, index) => (
+                    <View key={index} style={[imageStyle, { position: 'relative' }]}>
+                        <CustomImage source={{ uri: image }} style={{ width: '100%', height: '100%' }} />
+                        <TouchableOpacity
+                            style={{
+                                position: 'absolute',
+                                top: 5,
+                                left: 5,
+                                backgroundColor: 'rgba(0,0,0,0.5)',
+                                borderRadius: 10,
+                                padding: 5,
+                            }}
+                            onPress={() => deleteImage(index)}
+                        >
+                            <Ionicons name="close" size={16} color="white" />
+                        </TouchableOpacity>
+                    </View>
+                ))}
+            </View>
+        );
     };
 
     return (
@@ -63,19 +179,43 @@ const Page = () => {
                         />
                         <Text className="text-white text-base font-semibold">Hoàng Tiến Thái</Text>
                     </View>
-                    <View className="flex-1">
+                    <View
+                        style={{ flex: 1, backgroundColor: 'white', padding: 10, borderRadius: 10 }}
+                        className="space-y-3"
+                    >
+                        <TextInput
+                            autoFocus
+                            placeholder="Tiêu đề"
+                            placeholderTextColor="#c9c9c9"
+                            className="text-black font-bold text-base"
+                            value={value.title}
+                            onChangeText={(text) => handleInputChange('title', text)}
+                        />
+
+                        {/* Tag Input */}
+                        <TextInput
+                            placeholder="Tags"
+                            placeholderTextColor="#c9c9c9"
+                            className="font-medium text-sm"
+                            value={currentTag}
+                            onChangeText={handleTagInput}
+                        />
+
+                        {renderTags()}
+
                         <TextInput
                             placeholder="Bạn muốn đăng gì?"
                             placeholderTextColor="#c9c9c9"
                             multiline
-                            autoFocus
                             numberOfLines={10}
-                            style={{ flex: 1, backgroundColor: 'white', padding: 10, borderRadius: 10 }}
+                            className="font-normal text-sm"
+                            value={value.content}
+                            onChangeText={(text) => handleInputChange('content', text)}
                         />
+                        {renderImages()}
                     </View>
                 </ScrollView>
 
-                {/* Bottom Sheet */}
                 <BottomSheet
                     ref={bottomSheetRef}
                     snapPoints={snapPoints}

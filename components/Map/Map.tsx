@@ -1,15 +1,24 @@
-import { View, StyleSheet, Image, Text } from 'react-native';
+import { View, StyleSheet, Image, Text, TouchableOpacity, Alert } from 'react-native';
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import MapView, { Callout, MapPressEvent, Marker, UrlTile, Region, Polygon } from 'react-native-maps';
+import MapView, { Callout, MapPressEvent, Marker, UrlTile, Region, Polygon, Polyline } from 'react-native-maps';
 import useSearchStore from '@/store/searchStore';
 import axios from 'axios';
 import removeAccents from 'remove-accents';
-import { Badge } from '@rneui/themed';
+import { Divider } from '@rneui/themed';
 import { LocationData } from '@/constants/interface';
 import useMarkerStore from '@/store/quyhoachStore';
 import selectFilteredMarkers from '@/store/filterSelectors';
 import useFilterStore from '@/store/filterStore';
 import CustomCalloutView from './CustomCalloutView';
+import { CheckpointsIcon, RecyclebinIcon } from '@/assets/icons';
+import SimpleLineIcons from '@expo/vector-icons/SimpleLineIcons';
+import { calcArea } from '@/functions/calcArea';
+import * as Location from 'expo-location';
+import { Feather } from '@expo/vector-icons';
+import { BottomSheetModal, useBottomSheetModal } from '@gorhom/bottom-sheet';
+import BottomSheetAddLocation from '../ui/BottomSheetAddLocation';
+import useAuthStore from '@/store/authStore';
+import { router } from 'expo-router';
 
 interface MapInterface {
     opacity: number;
@@ -21,17 +30,29 @@ interface MapInterface {
 
 const Map = ({ opacity, lat, lon, setLocationInfo, locationInfo }: MapInterface) => {
     const mapRef = useRef<MapView>(null);
+
+    const { dismiss } = useBottomSheetModal();
+    const sheetRef = useRef<BottomSheetModal>(null);
+    
     const [districtName, setDistrictName] = useState<string>('');
     const [idDistrictForMarker, setIdDistrictForMarker] = useState<number | null>();
     const [polygon, setPolygon] = useState<{ latitude: number; longitude: number }[] | null>(null);
+    const [selectedPolygon, setSelectedPolygon] = useState<{ latitude: number; longitude: number }[] | null>(null);
     const [selectedIDQuyHoach, setSelectedIDQuyHoach] = useState<number | null>(null);
+    const [selectedCoordinates, setSelectedCoordinates] = useState<{ latitude: number; longitude: number }[]>([]);
+    const [isDraw, setIsDraw] = useState<boolean>(false);
+    const [polygonArea, setPolygonArea] = useState<number | null>(null);
+    const [latLon, setLatLon] = useState<{lat: number, lon: number}>()
+
     const listMarker = useMarkerStore((state) => state.listMarkers);
     const doSetDistrictId = useSearchStore((state) => state.doSetDistrictId);
     const selectedIdDistrict = useSearchStore((state) => state.districtId);
     const doSetListMarkers = useMarkerStore((state) => state.doSetListMarkers);
     const coordinates = useSearchStore((state) => state.coordinates);
-    const getAllFilter = useFilterStore((state) => state.getAllFilters);
-
+    const isLoggedIn = useAuthStore((state) => state.isAuthenticated)
+    const { getAllFilter } = useFilterStore((state) => ({
+        getAllFilter: state.getAllFilters,
+    }));
     let filters = getAllFilter();
 
     const [location, setLocation] = useState({
@@ -63,13 +84,78 @@ const Map = ({ opacity, lat, lon, setLocationInfo, locationInfo }: MapInterface)
         [region.latitudeDelta, region.longitudeDelta],
     );
 
+    const requestLocationPermission = async () => {
+        try {
+            const { status } = await Location.requestForegroundPermissionsAsync();
+            if (status !== 'granted') {
+                Alert.alert('Quyền bị từ chối', 'Cần có quyền truy cập vị trí để căn giữa bản đồ vào vị trí của bạn.');
+                return false;
+            }
+            return true;
+        } catch (error) {
+            console.error('Error requesting location permissions:', error);
+            return false;
+        }
+    };
+
+    const centerToUserLocation = async () => {
+        const hasPermission = await requestLocationPermission();
+        if (!hasPermission) return;
+
+        try {
+            const location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+            const { latitude, longitude } = location.coords;
+            setLocation({ latitude, longitude });
+            moveToLocation(latitude, longitude); // Center the map
+        } catch (error) {
+            console.error('Error getting user location: ', error);
+            Alert.alert('Lỗi', 'Không xác định được vị trí hiện tại của bạn.');
+        }
+    };
     const handleMapPress = useCallback(
         (e: MapPressEvent) => {
             const { latitude, longitude } = e.nativeEvent.coordinate;
-            setLocation({ latitude, longitude });
-            moveToLocation(latitude, longitude);
+            
+            if (isDraw) {
+                setSelectedCoordinates((prevCoordinates = []) => {
+                    if (!Array.isArray(prevCoordinates)) {
+                        prevCoordinates = [];
+                    }
+
+                    if (prevCoordinates.length === 0) {
+                        return [{ latitude, longitude }];
+                    }
+
+                    const isClosingPolygon =
+                        prevCoordinates.length > 2 &&
+                        Math.abs(prevCoordinates[0].latitude - latitude) < 0.0001 &&
+                        Math.abs(prevCoordinates[0].longitude - longitude) < 0.0001;
+
+                    if (isClosingPolygon) {
+                        const closedPolygon = [...prevCoordinates, prevCoordinates[0]];
+                        setSelectedPolygon(closedPolygon);
+                        const area = calcArea(closedPolygon);
+                        setPolygonArea(area);
+                        return closedPolygon;
+                    }
+
+                    return [...prevCoordinates, { latitude, longitude }];
+                });
+            } else {
+                const isNearFilteredMarker = filteredMarkers.some((marker) => {
+                    return (
+                        Math.abs(marker.latitude - latitude) < 0.0001 && Math.abs(marker.longitude - longitude) < 0.0001
+                    );
+                });
+
+                if (!isNearFilteredMarker) {
+                    setLatLon({ lat: latitude, lon: longitude })
+                    setLocation({ latitude, longitude });
+                    moveToLocation(latitude, longitude);
+                }
+            }
         },
-        [moveToLocation],
+        [isDraw, moveToLocation],
     );
 
     const handleRegionChange = useCallback((newRegion: Region) => {
@@ -85,8 +171,6 @@ const Map = ({ opacity, lat, lon, setLocationInfo, locationInfo }: MapInterface)
                     if (data) {
                         setDistrictName(data.subAdministrativeArea || '');
                         setLocationInfo(data as LocationData); // Casting to LocationData interface
-                    } else {
-                        console.log('No address found');
                     }
                 } catch (error) {
                     console.error('Error fetching address:', error);
@@ -193,59 +277,153 @@ const Map = ({ opacity, lat, lon, setLocationInfo, locationInfo }: MapInterface)
         fetchData();
     }, [idDistrictForMarker]);
 
+    const handleCheckPointsPress = () => {
+        setIsDraw((prevIsDraw) => {
+            if (!prevIsDraw) {
+                setSelectedCoordinates([]);
+                setSelectedPolygon(null);
+                setPolygonArea(null);
+            }
+            return !prevIsDraw;
+        });
+    };
+
+    const handleAddLocation = () => {
+        if(isLoggedIn) {
+
+            sheetRef.current?.present()
+        } else {
+            Alert.alert("Bạn cần đăng nhập để thêm mảnh đất muốn bán", "Chuyển đến trang đăng nhập", [
+                {
+                    text: 'Ok',
+                    onPress: () => router.navigate('/(modals)/auth')
+                }
+            ])
+        }
+    }
+
     return (
-        <MapView
-            style={styles.map}
-            initialRegion={{
-                latitude: location.latitude,
-                longitude: location.longitude,
-                latitudeDelta: region.latitudeDelta,
-                longitudeDelta: region.longitudeDelta,
-            }}
-            showsUserLocation
-            mapType="hybrid"
-            ref={mapRef}
-            onPress={handleMapPress}
-            onRegionChangeComplete={handleRegionChange}
-        >
-            <Marker coordinate={location} title="Marker Title" description="Marker Description">
-                <Image
-                    source={require('@/assets/images/marker.png')}
-                    style={{ width: 40, height: 40, resizeMode: 'contain' }}
-                />
-            </Marker>
+        <>
+            <MapView
+                style={styles.map}
+                initialRegion={{
+                    latitude: location.latitude,
+                    longitude: location.longitude,
+                    latitudeDelta: region.latitudeDelta,
+                    longitudeDelta: region.longitudeDelta,
+                }}
+                // showsUserLocation
+                mapType="hybrid"
+                ref={mapRef}
+                onPress={handleMapPress}
+                onRegionChangeComplete={handleRegionChange}
+            >
+                <Marker coordinate={location} title="Marker Title" description="Marker Description">
+                    <Image
+                        source={require('@/assets/images/marker.png')}
+                        style={{ width: 40, height: 40, resizeMode: 'contain' }}
+                    />
+                </Marker>
 
-            {filteredMarkers &&
-                filteredMarkers.length > 0 &&
-                filteredMarkers.map((marker) => (
-                    <Marker
-                        key={marker.id}
-                        coordinate={{ latitude: marker.latitude, longitude: marker.longitude }}
-                        title="Marker Title 1"
-                        description="Marker Description"
+                {filteredMarkers &&
+                    filteredMarkers.length > 0 &&
+                    filteredMarkers.map((marker) => (
+                        <Marker
+                            key={marker.id}
+                            coordinate={{ latitude: marker.latitude, longitude: marker.longitude }}
+                            title="Marker Title 1"
+                            description="Marker Description"
+                        >
+                            <Image
+                                source={require('@/assets/images/markerLocation.png')}
+                                style={{ width: 40, height: 40, resizeMode: 'contain' }}
+                            />
+                            <Callout>
+                                <CustomCalloutView marker={marker} />
+                            </Callout>
+                        </Marker>
+                    ))}
+
+                {selectedCoordinates &&
+                    selectedCoordinates.length > 0 &&
+                    selectedCoordinates.map((marker, index) => (
+                        <Marker key={index} coordinate={{ latitude: marker.latitude, longitude: marker.longitude }} />
+                    ))}
+
+                {selectedIDQuyHoach && (
+                    <UrlTile
+                        urlTemplate={`https://apilandinvest.gachmen.org/get_api_quyhoach/${selectedIDQuyHoach}/{z}/{x}/{y}`}
+                        maximumZ={22}
+                        opacity={opacity}
+                        zIndex={-2}
+                    />
+                )}
+
+                {polygon && (
+                    <Polygon
+                        style={{ zIndex: 1 }}
+                        coordinates={polygon}
+                        strokeColor="rgba(0, 0, 255, 0.9)"
+                        strokeWidth={3}
+                        geodesic={true}
+                    />
+                )}
+                {selectedCoordinates.length > 1 && (
+                    <Polyline
+                        coordinates={selectedCoordinates}
+                        strokeColor="rgba(0, 0, 255, 0.9)" // Màu xanh dương
+                        strokeWidth={3}
+                    />
+                )}
+
+                {/* Hiển thị đa giác nếu đã vẽ xong */}
+                {selectedPolygon && (
+                    <Polygon
+                        coordinates={selectedPolygon}
+                        strokeColor="rgba(255, 0, 0, 0.9)" // Màu đỏ
+                        strokeWidth={3}
+                        fillColor="rgba(255, 182, 193, 0.5)" // Màu hồng nhạt có độ trong suốt
+                    />
+                )}
+            </MapView>
+            <View className={'flex flex-row items-center  space-x-2 p-1 absolute bottom-12 right-9'}>
+                {polygonArea && (
+                    <View className="bg-white p-2 rounded-md border">
+                        <Text className="text-black text-sm font-medium">{polygonArea.toFixed(0)} m²</Text>
+                    </View>
+                )}
+                <View className={'flex flex-row items-center bg-white rounded-md border  '}>
+                    <TouchableOpacity
+                        onPress={handleCheckPointsPress}
+                        className={`py-1 px-2  ${isDraw && 'bg-[#d9d9d9]'}`}
                     >
-                        <Image
-                            source={require('@/assets/images/markerLocation.png')}
-                            style={{ width: 40, height: 40, resizeMode: 'contain' }}
-                        />
-                        <Callout>
-                            <CustomCalloutView marker={marker} />
-                        </Callout>
-                    </Marker>
-                ))}
+                        <CheckpointsIcon />
+                    </TouchableOpacity>
 
-            {selectedIDQuyHoach && (
-                <UrlTile
-                    urlTemplate={`https://apilandinvest.gachmen.org/get_api_quyhoach/${selectedIDQuyHoach}/{z}/{x}/{y}`}
-                    maximumZ={22}
-                    opacity={opacity}
-                />
-            )}
+                    <Divider orientation="vertical" />
+                    <TouchableOpacity
+                        onPress={() => {
+                            setSelectedCoordinates([]);
+                            setSelectedPolygon(null);
+                            setPolygonArea(null);
+                            setIsDraw(false);
+                        }}
+                        className={'py-1 px-2'}
+                    >
+                        <RecyclebinIcon />
+                    </TouchableOpacity>
+                </View>
 
-            {polygon && (
-                <Polygon style={{zIndex: 99999}} coordinates={polygon} strokeColor="rgba(0, 0, 255, 0.9)" strokeWidth={3} geodesic={true} />
-            )}
-        </MapView>
+                <TouchableOpacity className={'p-2 bg-white rounded-full  border'} onPress={centerToUserLocation}>
+                    <SimpleLineIcons name="cursor" size={20} color="black" />
+                </TouchableOpacity>
+
+                <TouchableOpacity className={'p-2 bg-white rounded-full  border'} onPress={handleAddLocation}>
+                    <Feather name="plus" size={20} color="black" />
+                </TouchableOpacity>
+            </View>
+            <BottomSheetAddLocation ref={sheetRef} dismiss={dismiss} lat={location.latitude} lon={location.longitude} />
+        </>
     );
 };
 

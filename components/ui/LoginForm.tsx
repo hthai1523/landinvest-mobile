@@ -50,19 +50,14 @@ const LoginForm = ({ onChangeForm }: { onChangeForm: () => void }) => {
             const state = await NetInfo.fetch();
 
             if (state.isConnected && state.details) {
-                const ipAddress:string = state.details.ipAddress;
+                const ipAddress: string = state.details.ipAddress;
                 const res = await callLogin(userName, password, ipAddress);
                 const { access_token, UserID, userData, refreshtoken } = res.data;
                 if (res.data && res.data.access_token) {
-                    useAuthStore.getState().login(
-                        userData,
-                        access_token,
-                        refreshtoken, 
-                        UserID,
-                    );
-                    console.log(res.data)
+                    useAuthStore.getState().login(userData, access_token, refreshtoken, UserID);
+                    console.log(res.data);
                     Alert.alert('Thành công', 'Đăng nhập thành công!');
-                    router.replace('/(tabs)/')
+                    router.replace('/(tabs)/');
                 }
             } else {
                 Alert.alert('Không có kết nối Internet');
@@ -93,7 +88,6 @@ const LoginForm = ({ onChangeForm }: { onChangeForm: () => void }) => {
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#1e1e1e' }}>
-
             <View
                 style={{
                     flexDirection: 'row',
@@ -123,11 +117,7 @@ const LoginForm = ({ onChangeForm }: { onChangeForm: () => void }) => {
                 />
             </View>
 
-            <KeyboardAvoidingView
-                style={{ flex: 1 }}
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-            >
+            {/* <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}> */}
                 <View style={{ padding: 16, justifyContent: 'center', flex: 1 }}>
                     <Animated.Text
                         entering={FadeInDown.duration(1000).springify()}
@@ -221,7 +211,7 @@ const LoginForm = ({ onChangeForm }: { onChangeForm: () => void }) => {
                         </Text>
                     </Animated.Text>
                 </View>
-            </KeyboardAvoidingView>
+            {/* </KeyboardAvoidingView> */}
         </SafeAreaView>
     );
 };

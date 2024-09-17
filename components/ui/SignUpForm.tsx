@@ -8,7 +8,7 @@ import { Button } from '@rneui/themed';
 import Colors from '@/constants/Colors';
 import { signUpFormSchema, SignUpFormSchema } from '@/constants/FormSchema';
 
-const SignUpForm = ({onChangeForm} : {onChangeForm: () => void}) => {
+const SignUpForm = ({ onChangeForm }: { onChangeForm: () => void }) => {
     const {
         control,
         handleSubmit,
@@ -23,40 +23,51 @@ const SignUpForm = ({onChangeForm} : {onChangeForm: () => void}) => {
         // Xử lý đăng ký ở đây, ví dụ: registerUser(data);
     };
 
-    const renderInput = (name: keyof SignUpFormSchema, placeholder: string, options: any = {}, delay:number) => (
-       <Animated.View entering={FadeInDown.delay(delay).duration(1000).springify()} >
-          <Controller
-              control={control}
-              name={name}
-              render={({ field: { onChange, onBlur, value } }) => (
-                  <View style={{ marginBottom: 10 }}>
-                      <TextInput
-                          placeholder={placeholder}
-                          placeholderTextColor="gray"
-                          style={{
-                              borderColor: errors[name] ? 'red' : 'gray',
-                              borderWidth: 1,
-                              padding: 10,
-                              backgroundColor: '#fff',
-                              color: '#000',
-                              borderRadius: 12,
-                          }}
-                          onBlur={onBlur}
-                          onChangeText={onChange}
-                          value={value as string}
-                          {...options}
-                      />
-                      {errors[name] && <Text style={{ color: 'red' }}>{errors[name]?.message}</Text>}
-                  </View>
-              )}
-          />
-       </Animated.View>
+    const renderInput = (name: keyof SignUpFormSchema, placeholder: string, options: any = {}, delay: number) => (
+        <Animated.View entering={FadeInDown.delay(delay).duration(1000).springify()}>
+            <Controller
+                control={control}
+                name={name}
+                render={({ field: { onChange, onBlur, value } }) => (
+                    <View style={{ marginBottom: 10 }}>
+                        <TextInput
+                            placeholder={placeholder}
+                            placeholderTextColor="gray"
+                            style={{
+                                borderColor: errors[name] ? 'red' : 'gray',
+                                borderWidth: 1,
+                                padding: 10,
+                                backgroundColor: '#fff',
+                                color: '#000',
+                                borderRadius: 12,
+                            }}
+                            onBlur={onBlur}
+                            onChangeText={onChange}
+                            value={value as string}
+                            {...options}
+                        />
+                        {errors[name] && <Text style={{ color: 'red' }}>{errors[name]?.message}</Text>}
+                    </View>
+                )}
+            />
+        </Animated.View>
     );
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#1e1e1e' }}>
             <StatusBar style="light" />
-            <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center', gap: 12, width: '100%', position: 'absolute', bottom: 0, left: 0 }}>
+            <View
+                style={{
+                    flexDirection: 'row',
+                    alignItems: 'flex-end',
+                    justifyContent: 'center',
+                    gap: 12,
+                    width: '100%',
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                }}
+            >
                 <Animated.Image
                     entering={FadeInUp.delay(200).duration(1000).springify()}
                     style={{ height: 350, width: 90 }}
@@ -73,13 +84,20 @@ const SignUpForm = ({onChangeForm} : {onChangeForm: () => void}) => {
                     source={require('@/assets/images/Layer1.png')}
                 />
             </View>
-            <KeyboardAvoidingView 
-                style={{ flex: 1 }} 
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-            >
-                <View className='p-4 justify-center flex-1'>
-                    <Animated.Text  entering={FadeInDown.duration(1000).springify()} style={{ color: 'white', fontWeight: 'bold', fontSize: 24, textAlign: 'center', marginBottom: 20 }}>Đăng ký</Animated.Text>
+            <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+                <View className="p-4 justify-center flex-1">
+                    <Animated.Text
+                        entering={FadeInDown.duration(1000).springify()}
+                        style={{
+                            color: 'white',
+                            fontWeight: 'bold',
+                            fontSize: 24,
+                            textAlign: 'center',
+                            marginBottom: 20,
+                        }}
+                    >
+                        Đăng ký
+                    </Animated.Text>
 
                     <Animated.View entering={FadeInDown.duration(1000).springify()}>
                         {renderInput('name', 'Tên', { autoCapitalize: 'words' }, 200)}
@@ -88,15 +106,29 @@ const SignUpForm = ({onChangeForm} : {onChangeForm: () => void}) => {
                         {renderInput('passwordConfirmation', 'Xác nhận mật khẩu', { secureTextEntry: true }, 800)}
                     </Animated.View>
 
-                    <Animated.View  entering={FadeInDown.delay(1000).duration(1000).springify()}>
-                      <Button
-                          buttonStyle={{ backgroundColor: Colors.primary.green, borderRadius: 12, marginTop: 20, marginBottom: 10 }}
-                          title="Đăng ký"
-                          onPress={handleSubmit(onSubmit)}
-                      />
+                    <Animated.View entering={FadeInDown.delay(1000).duration(1000).springify()}>
+                        <Button
+                            buttonStyle={{
+                                backgroundColor: Colors.primary.green,
+                                borderRadius: 12,
+                                marginTop: 20,
+                                marginBottom: 10,
+                            }}
+                            title="Đăng ký"
+                            onPress={handleSubmit(onSubmit)}
+                        />
                     </Animated.View>
-                    <Animated.Text  entering={FadeInDown.delay(1200).duration(1000).springify()} className='text-white font-medium text-sm text-center'>
-                        Bạn đã có tài khoản? <Text onPress={() => onChangeForm()} style={{ fontWeight: '700', fontSize: 14 ,color: Colors.primary.green }}>Đăng Nhập</Text>
+                    <Animated.Text
+                        entering={FadeInDown.delay(1200).duration(1000).springify()}
+                        className="text-white font-medium text-sm text-center"
+                    >
+                        Bạn đã có tài khoản?{' '}
+                        <Text
+                            onPress={() => onChangeForm()}
+                            style={{ fontWeight: '700', fontSize: 14, color: Colors.primary.green }}
+                        >
+                            Đăng Nhập
+                        </Text>
                     </Animated.Text>
                 </View>
             </KeyboardAvoidingView>

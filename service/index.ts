@@ -1,3 +1,4 @@
+import { Post, UserPostNew, ViewAllGroupResponse, ViewAllPostResponse } from '@/constants/interface';
 import instance from '@/utils/axiosCustomize';
 import removeAccents from 'remove-accents';
 
@@ -6,7 +7,7 @@ export const callLogin = (Username: string, Password: string, LastLoginIP: strin
     const params = {
         Username,
         Password,
-        LastLoginIP
+        LastLoginIP,
     };
     return instance.post('/api/login', params);
 };
@@ -222,38 +223,28 @@ export const DeleteCommentAuction = async (IDComment: string) => {
 };
 
 // Forums post
-export const ViewlistPost = () => {
-    return instance.get('/api/forum/view_allpost');
+export const ViewlistPost = async (pageNumber: number): Promise<ViewAllPostResponse> => {
+    const { data } = await instance.get(`/api/forum/view_allpost/${pageNumber}`);
+    return data;
 };
 
-export const CreatePost = (
-    GroupID: string,
-    Title: string,
-    Content: string,
-    PostLatitude: number,
-    PostLongitude: number,
-    base64Images: string[],
-    isHastags: string[],
-) => {
-    const params = {
-        GroupID,
-        Title,
-        Content,
-        PostLatitude,
-        PostLongitude,
-        Images: base64Images,
-        Hastags: isHastags,
-    };
-    console.log('params', params);
-    return instance.post('/api/forum/add_post', params);
+export const ViewHotPost = async (pageNumber: number) : Promise<ViewAllPostResponse> => {
+    const { data } = await instance.get(`/api/forum/view_allpost_sort_timeview_count/${pageNumber}`);
+    return data;
+};
+
+export const CreatePost = async (params: UserPostNew) => {
+    const { data } = await instance.post('/api/forum/add_post', params);
+    return data;
 };
 
 export const UpdatePost = (PostID: string, Title: string, Content: string) => {
     return instance.patch(`/api/forum/update_post/${PostID}`, { Title, Content });
 };
 
-export const callFetchPostById = (PostID: string) => {
-    return instance.get(`/api/forum/view_post/${PostID}`);
+export const FetchPostById = async (PostID: string) : Promise<Post[]> => {
+    const {data} = await instance.get(`/api/forum/view_post/${PostID}`);
+    return data
 };
 
 export const DeletePost = (PostID: string) => {
@@ -311,13 +302,19 @@ export const ViewlistGroup = (BoxID: string) => {
     return instance.get(`/api/group/all_group/${BoxID}`);
 };
 
+export const ViewListAllGroup = async (pageNum: number): Promise<ViewAllGroupResponse> => {
+    const { data } = await instance.get(`api/group/list_all_group/${pageNum}`);
+    return data;
+};
+
 // API user, check online
 export const callGetAllUsers = () => {
     return instance.get('/api/listalluser');
 };
 
-export const ViewProfileUser = (USERID: string) => {
-    return instance.get(`/api/private/profile/${USERID}`);
+export const ViewProfileUser = async (USERID: string) => {
+    const {data} = await instance.get(`/api/private/profile/${USERID}`);
+    return data
 };
 
 export const CheckUserOnline = (USERID: string) => {

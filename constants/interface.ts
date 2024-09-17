@@ -98,3 +98,52 @@ interface PostDetails {
 interface UserDetails {
     userJoinedTime: string;
 }
+
+export interface Post {
+    Content: string;
+    FavoriteNumber: number;
+    GroupID: number;
+    Hastags: string[];
+    IPPosted: string;
+    Images: string[];
+    PostID: string;
+    PostLatitude: string;
+    PostLongitude: string;
+    PostTime: string;
+    Title: string;
+    UpdatePostAt: string | null;
+    UserID: number;
+}
+
+export interface UserPostNew {
+    GroupID: number
+    Title: string
+    Content: string
+    PostLatitude: number
+    PostLongitude: number
+    Images: string[]
+}
+
+export interface ViewAllPostResponse {
+    data: Post[];
+    message: string;
+    numberItem: number;
+    numberPage: number;
+    status: number;
+}
+export interface Group {
+    BoxID: number;
+    CreateAt: string;
+    GroupID: number;
+    GroupName: string;
+    UserID: number;
+    avatarLink: string;
+}
+
+export interface ViewAllGroupResponse {
+    data: Group[];
+    message: string;
+    numberItem: number;
+    numberPage: number;
+    status: number | 200 | 400;
+}

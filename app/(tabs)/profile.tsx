@@ -11,12 +11,14 @@ export default function Profile() {
     const segments = useSegments();
     const { user } = useAuthStore.getState();
 
+    console.log(user)
+
     const handleLogout = async () => {
         try {
             const res = await callLogout();
             if (res && res.data.logout === true) {
                 Alert.alert('Đăng xuất thành công');
-                router.replace('/auth');
+                router.navigate('/(tabs)/');
             }
         } catch (error) {
             console.error('Error logging out:', error);
@@ -26,8 +28,8 @@ export default function Profile() {
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: Colors.primary.background }}>
-            {true ? (
-                <ProfileContent />
+            {isLoggedIn ? (
+                <ProfileContent/>
             ) : (
                 <View className="items-center justify-center h-full space-y-3">
                     <Text className="text-white text-center font-bold">

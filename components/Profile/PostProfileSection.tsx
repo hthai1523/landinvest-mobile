@@ -1,17 +1,25 @@
 import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import React from 'react';
+import { Post } from '@/constants/interface';
+import CustomImage from '../ui/Image';
+import { calcDate } from '@/functions/calcDate';
+import { router } from 'expo-router';
 
-const PostProfileSection = () => {
+const PostProfileSection = ({ post }: { post: Post }) => {
+
+    // const getUser = async (userId : string) => {
+    //     const data = await 
+    // }
+
     return (
         <>
-            <TouchableOpacity style={styles.shadow} className="flex-row bg-[#262D34] p-2 rounded-xl shadow-md my-2">
-                <Image source={require('@/assets/images/quyhoach.png')} className="w-16 h-full rounded-md mr-2" />
+            <TouchableOpacity onPress={() => router.navigate(`/listing/post/${post?.PostID}`)} style={styles.shadow} className="flex-row bg-[#262D34] p-2 rounded-xl shadow-md mb-4">
                 <View className="flex-1 justify-start space-y-1">
                     <Text className="text-white font-semibold text-sm" numberOfLines={1} ellipsizeMode="tail">
-                        [Nổi bật] Tư vấn - Trao đổi - Chia sẻ tư vấn thiết kế, thi công
+                        {post?.Title || '[Nổi bật] Tư vấn - Trao đổi - Chia sẻ tư vấn thiết kế, thi công'}
                     </Text>
                     <View className="flex flex-row space-x-2 overflow-hidden">
-                        <View className="bg-[#2C353D] w-fit p-1 rounded-md">
+                        {/* <View className="bg-[#2C353D] w-fit p-1 rounded-md">
                             <Text>#HaNoi</Text>
                         </View>
                         <View className="bg-[#2C353D] w-fit p-1 rounded-md">
@@ -19,8 +27,16 @@ const PostProfileSection = () => {
                         </View>
                         <View className="bg-[#2C353D] w-fit p-1 rounded-md">
                             <Text>#HaNoi</Text>
-                        </View>
+                        </View> */}
+                        {post &&
+                            post?.Hastags.length > 0 &&
+                            post.Hastags.map((item) => (
+                                <View className="bg-[#2C353D] w-fit p-1 rounded-md">
+                                    <Text>{item}</Text>
+                                </View>
+                            ))}
                     </View>
+                    
                     <View className="flex flex-row items-center space-x-2">
                         <Image
                             source={require('@/assets/images/avatar.png')}
@@ -28,10 +44,13 @@ const PostProfileSection = () => {
                         />
                         <View>
                             <Text className="text-white font-semibold text-sm ">Thai Hoang </Text>
-                            <Text className="text-white text-xs font-thin">3 tuần trước</Text>
+                            <Text className="text-white text-xs font-thin">{calcDate(post?.PostTime)}</Text>
                         </View>
                     </View>
                 </View>
+                {post && post?.Images.length > 0 && (
+                    <CustomImage source={post.Images[0]} className="w-16 h-full rounded-md mr-2" />
+                )}
             </TouchableOpacity>
         </>
     );

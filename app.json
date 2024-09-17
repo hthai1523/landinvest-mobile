@@ -32,7 +32,13 @@
             [
                 "expo-image-picker",
                 {
-                    "photosPermission": "The app accesses your photos to let you share them with your friends."
+                    "photosPermission": "Ứng dụng sẽ truy cập ảnh của bạn để bạn có thể chia sẻ chúng với bạn bè."
+                }
+            ],
+            [
+                "expo-location",
+                {
+                    "locationAlwaysAndWhenInUsePermission": "Cho phép Land Invest sử dụng vị trí hiện tại của bạn"
                 }
             ]
         ],

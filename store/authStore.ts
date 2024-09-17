@@ -1,20 +1,21 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { createJSONStorage, persist } from 'zustand/middleware';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-interface User {
+export interface User {
     Username: string;
     FullName: string;
-    Gender: string; 
+    Gender: string;
     Email: string;
     RegistrationIP: string;
     UserID: number;
     avatarLink: string | null;
     Bio: string | null;
-    BirthPlace: string | null; 
+    BirthPlace: string | null;
     CurrentAdd: string | null;
     Phone: string | null;
     role: boolean;
-  }
+}
 
 interface AuthState {
     isAuthenticated: boolean;
@@ -45,33 +46,39 @@ const useAuthStore = create<AuthState & AuthActions>()(
         (set) => ({
             ...initialState,
 
-            login: (user, accessToken, refreshToken, userId) => set({
-                isAuthenticated: true,
-                user,
-                accessToken,
-                refreshToken,
-                userId,
-            }),
+            login: (user, accessToken, refreshToken, userId) =>
+                set({
+                    isAuthenticated: true,
+                    user,
+                    accessToken,
+                    refreshToken,
+                    userId,
+                }),
 
             logout: () => set(initialState),
 
-            updateUser: (userData) => set((state) => ({
-                user: state.user ? { ...state.user, ...userData } : null,
-            })),
+            updateUser: (userData) =>
+                set((state) => ({
+                    user: state.user ? { ...state.user, ...userData } : null,
+                })),
 
-            setTokens: (accessToken, refreshToken) => set({
-                accessToken,
-                refreshToken,
-            }),
+            setTokens: (accessToken, refreshToken) =>
+                set({
+                    accessToken,
+                    refreshToken,
+                }),
 
             clearAuthState: () => set(initialState),
         }),
         {
             name: 'auth-storage',
+            storage: createJSONStorage(() => AsyncStorage),
             partialize: (state) => ({
                 accessToken: state.accessToken,
                 refreshToken: state.refreshToken,
                 userId: state.userId,
+                isAuthenticated: state.isAuthenticated,
+                user: state.user,
             }),
         }
     )

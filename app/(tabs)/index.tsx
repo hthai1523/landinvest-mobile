@@ -1,7 +1,7 @@
 import React, { useCallback, useRef, useState, useMemo } from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { Button } from '@rneui/themed';
+import { Button, Divider } from '@rneui/themed';
 import Feather from '@expo/vector-icons/Feather';
 import { BottomSheetModal, useBottomSheetModal } from '@gorhom/bottom-sheet';
 import { useSharedValue } from 'react-native-reanimated';
@@ -10,10 +10,11 @@ import { Slider } from 'react-native-awesome-slider';
 import Map from '@/components/Map/Map';
 import BottomSheet from '@/components/ui/BottomSheet';
 import BottomSheetQuyHoach from '@/components/ui/BottomSheetQuyHoach';
-import { DollarIcon, MapLocationIcon } from '@/assets/icons';
+import { CheckpointsIcon, DollarIcon, MapLocationIcon, RecyclebinIcon } from '@/assets/icons';
 import Colors from '@/constants/Colors';
 import useSearchStore from '@/store/searchStore';
 import { LocationData } from '@/constants/interface';
+import SimpleLineIcons from '@expo/vector-icons/SimpleLineIcons';
 
 const YEAR_QUY_HOACH = ['Quy Hoạch 2024', 'Quy hoạch 2030', 'Quy hoạch khác'];
 
@@ -75,9 +76,10 @@ const Page = () => {
         <View className="flex-1 justify-center items-center relative">
             <StatusBar style="light" />
             <Map opacity={opacity} lat={lat} lon={lon} setLocationInfo={setLocationInfo} locationInfo={locationInfo} />
-            <View className=" w-full absolute bottom-0 left-0 py-1" style={{backgroundColor: Colors.primary.header}}>
+            <View className=" w-full absolute bottom-0 left-0 py-1" style={{ backgroundColor: Colors.primary.header }}>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} className="space-x-2 ">
-                    <View className="h-full min-w-[300px] bg-[#D9D9D9] rounded-3xl flex flex-row items-center justify-center space-x-2 px-2">
+                    <View
+                        className="h-full min-w-[300px] bg-[#D9D9D9] rounded-3xl flex flex-row items-center justify-center space-x-2 px-2">
                         <MapLocationIcon />
                         <Text className="flex-1 font-normal text-sm">
                             {locationInfo?.administrativeArea}, {locationInfo?.subAdministrativeArea}
@@ -92,7 +94,7 @@ const Page = () => {
                 </ScrollView>
             </View>
 
-            <View className="absolute bottom-[120px] right-[-40px] rotate-[-90deg]">
+            <View className="absolute bottom-[115px] right-[-40px] rotate-[-90deg]">
                 <Slider
                     progress={progress}
                     style={{ width: 120 }}
@@ -109,6 +111,8 @@ const Page = () => {
                     onValueChange={handleOpacityChange}
                 />
             </View>
+
+
             <BottomSheet dismiss={dismiss} ref={sheetRef} />
             <BottomSheetQuyHoach dismiss={handleBottomSheetQuyHoachDismiss} ref={sheetQuyHoachRef} />
         </View>

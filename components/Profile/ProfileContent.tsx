@@ -11,6 +11,8 @@ import { TouchableOpacity } from 'react-native';
 import CustomImage from '../ui/Image';
 import CustomButton from '../ui/Button';
 import { Ionicons } from '@expo/vector-icons';
+import useAuthStore from '@/store/authStore';
+import { Avatar } from '@rneui/themed';
 
 const { width } = Dimensions.get('window');
 
@@ -18,6 +20,8 @@ const ProfileContent = () => {
     const [activeTab, setActiveTab] = useState(0);
     const translateX = useSharedValue(0);
     const contentTranslateX = useSharedValue(0);
+
+    const { user, logout } = useAuthStore.getState();
 
     const handlePress = (index: number) => {
         setActiveTab(index);
@@ -51,6 +55,7 @@ const ProfileContent = () => {
             const res = await callLogout();
             if (res && res.data.logout === true) {
                 Alert.alert('Đăng xuất thành công');
+                logout();
                 router.navigate('/(tabs)/');
             }
         } catch (error) {
@@ -67,20 +72,35 @@ const ProfileContent = () => {
                     // source={require('@/assets/images/User.jpg')}
                     className="h-52 bg-[#d9d9d9]"
                 />
-                <CustomImage
-                    source={require('@/assets/images/User.jpg')}
-                    className="w-36 h-36 rounded-full absolute -bottom-9 left-2 border-2 border-[#EA942C]"
-                />
+                {user?.avatarLink ? (
+                    <CustomImage
+                        source={user.avatarLink}
+                        className="w-36 h-36 rounded-full absolute -bottom-9 left-2 border-2 border-[#EA942C]"
+                    />
+                ) : (
+                    <Avatar
+                        size={144}
+                        rounded
+                        title={user?.Username.slice(0, 1).toLocaleUpperCase()}
+                        containerStyle={{
+                            backgroundColor: Colors.primary.green,
+                            position: 'absolute',
+                            bottom: -36,
+                            left: 8,
+                        }}
+                    />
+                )}
             </View>
             <View className="mt-14 space-y-4">
                 <View className="px-4 flex flex-row items-end justify-between">
                     <View className="space-y-2">
-                        <Text className="text-white font-bold text-2xl">Hoàng Tiến Thái</Text>
-                        <Text className="text-white text-sm">Email: hthai1523@gmail.com</Text>
+                        <Text className="text-white font-bold text-2xl">{user?.FullName}</Text>
+                        <Text className="text-white text-sm">Email: {user?.Email}</Text>
                     </View>
-                    <TouchableOpacity>
+                    {/* <TouchableOpacity>
                         <Ionicons name="settings-outline" size={24} color="#d9d9d9" />
-                    </TouchableOpacity>
+                    </TouchableOpacity> */}
+                    <CustomButton title="Đăng xuất" onPress={handleLogout} type="danger" />
                 </View>
                 <View style={styles.tabContainer}>
                     <Pressable style={styles.tab} onPress={() => handlePress(0)}>

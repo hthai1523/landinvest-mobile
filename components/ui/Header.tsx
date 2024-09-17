@@ -11,7 +11,7 @@ export function Header() {
 
     return (
         <View
-            className={`flex flex-row justify-between items-center p-1 `}
+            className={`flex flex-row justify-between items-center p-1 h-[70px] `}
             style={{
                 paddingTop: insets.top,
                 backgroundColor: Colors.primary.header,

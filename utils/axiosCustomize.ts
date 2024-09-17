@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 
 const instance = axios.create({
     baseURL: `https://apilandinvest.gachmen.org`,
+   
 });
 
 const handleRefreshToken = async () => {
@@ -13,7 +14,7 @@ const handleRefreshToken = async () => {
           throw new Error('Missing userId or refreshToken');
       }
 
-      const res = await instance.post(`/refresh_token/${userId}`, { refresh_token: refreshToken });
+      const res = await instance.post(`/refresh_token/${userId}`);
       if (res && res.data) {
           const newAccessToken = res.data.access_token;
           
@@ -61,11 +62,11 @@ instance.interceptors.response.use(
 
         if (error.response && error.response.status === 400 && originalConfig.url.includes('/refresh_token/')) {
             useAuthStore.getState().clearAuthState();
-            router.navigate('/auth')
+            router.navigate('/(modals)/auth/')
         }
 
         return Promise.reject(error.response ? error.response.data : error);
     }
 );
 
-export default instance;
+export default instance; 
