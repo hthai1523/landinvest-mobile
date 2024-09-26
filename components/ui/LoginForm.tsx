@@ -67,27 +67,8 @@ const LoginForm = ({ onChangeForm }: { onChangeForm: () => void }) => {
         }
     };
 
-    // useEffect(() => {
-    //     getIpAddress()
-    //     }, []);
-
-    // const getIpAddress = async () => {
-    //     try {
-    //       const state = await NetInfo.fetch();
-
-    //       if (state.isConnected && state.details) {
-    //         const ipAddress = state.details.ipAddress;
-    //         console.log('IP Address:', ipAddress);
-    //       } else {
-    //         console.log('Not connected to the internet');
-    //       }
-    //     } catch (error) {
-    //       console.error('Error getting IP address:', error);
-    //     }
-    //   };
-
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: '#1e1e1e' }}>
+        <View style={{ flex: 1 }}>
             <View
                 style={{
                     flexDirection: 'row',
@@ -118,101 +99,101 @@ const LoginForm = ({ onChangeForm }: { onChangeForm: () => void }) => {
             </View>
 
             {/* <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}> */}
-                <View style={{ padding: 16, justifyContent: 'center', flex: 1 }}>
-                    <Animated.Text
-                        entering={FadeInDown.duration(1000).springify()}
-                        style={{
-                            color: 'white',
-                            fontWeight: 'bold',
-                            fontSize: 24,
-                            textAlign: 'center',
-                            marginBottom: 20,
-                        }}
+            <View style={{ padding: 16, justifyContent: 'center', flex: 1 }}>
+                <Animated.Text
+                    entering={FadeInDown.duration(1000).springify()}
+                    style={{
+                        color: 'white',
+                        fontWeight: 'bold',
+                        fontSize: 24,
+                        textAlign: 'center',
+                        marginBottom: 20,
+                    }}
+                >
+                    Đăng nhập
+                </Animated.Text>
+
+                <Animated.View entering={FadeInDown.delay(200).duration(1000)} style={{ marginBottom: 10 }}>
+                    <Controller
+                        control={control}
+                        name="userName"
+                        render={({ field: { onChange, onBlur, value } }) => (
+                            <>
+                                <TextInput
+                                    placeholder="Tên đăng nhập"
+                                    placeholderTextColor="gray"
+                                    style={{
+                                        borderColor: errors.userName ? 'red' : 'gray',
+                                        borderWidth: 1,
+                                        padding: 10,
+                                        backgroundColor: '#f5f5f5',
+                                        color: '#000',
+                                        borderRadius: 12,
+                                    }}
+                                    onBlur={onBlur}
+                                    onChangeText={onChange}
+                                    value={value}
+                                    keyboardType="default"
+                                    autoCapitalize="none"
+                                />
+                                {errors.userName && <Text style={{ color: 'red' }}>{errors.userName.message}</Text>}
+                            </>
+                        )}
+                    />
+                </Animated.View>
+
+                <Animated.View entering={FadeInDown.delay(400).duration(1000)} style={{ marginBottom: 10 }}>
+                    <Controller
+                        control={control}
+                        name="password"
+                        render={({ field: { onChange, onBlur, value } }) => (
+                            <>
+                                <TextInput
+                                    placeholder="Mật khẩu"
+                                    placeholderTextColor="gray"
+                                    style={{
+                                        borderColor: errors.password ? 'red' : 'gray',
+                                        borderWidth: 1,
+                                        padding: 10,
+                                        backgroundColor: '#f5f5f5',
+                                        color: '#000',
+                                        borderRadius: 12,
+                                    }}
+                                    onBlur={onBlur}
+                                    onChangeText={onChange}
+                                    value={value}
+                                    secureTextEntry
+                                />
+                                {errors.password && <Text style={{ color: 'red' }}>{errors.password.message}</Text>}
+                            </>
+                        )}
+                    />
+                </Animated.View>
+
+                <Animated.View entering={FadeInDown.delay(600).duration(1000).springify()} style={{ marginBottom: 10 }}>
+                    <Button
+                        buttonStyle={{ backgroundColor: Colors.primary.green, borderRadius: 12 }}
+                        title="Đăng nhập"
+                        onPress={handleSubmit(onSubmit)}
+                        // loading={true}
+                        // disabled={true}
+                    />
+                </Animated.View>
+                <Animated.Text
+                    entering={FadeInDown.delay(800).duration(1000).springify()}
+                    className="text-white font-medium text-sm text-center"
+                >
+                    Bạn chưa có tài khoản?{' '}
+                    <Text
+                        onPress={() => onChangeForm()}
+                        style={{ fontWeight: '700', fontSize: 14, color: Colors.primary.green }}
                     >
-                        Đăng nhập
-                    </Animated.Text>
-
-                    <Animated.View entering={FadeInDown.delay(200).duration(1000).springify()}>
-                        <Controller
-                            control={control}
-                            name="userName"
-                            render={({ field: { onChange, onBlur, value } }) => (
-                                <View style={{ marginBottom: 10 }}>
-                                    <TextInput
-                                        placeholder="Email"
-                                        placeholderTextColor="gray"
-                                        style={{
-                                            borderColor: errors.userName ? 'red' : 'gray',
-                                            borderWidth: 1,
-                                            padding: 10,
-                                            backgroundColor: '#fff',
-                                            color: '#000',
-                                            borderRadius: 12,
-                                        }}
-                                        onBlur={onBlur}
-                                        onChangeText={onChange}
-                                        value={value}
-                                        keyboardType="email-address"
-                                        autoCapitalize="none"
-                                    />
-                                    {errors.userName && <Text style={{ color: 'red' }}>{errors.userName.message}</Text>}
-                                </View>
-                            )}
-                        />
-                    </Animated.View>
-
-                    <Animated.View entering={FadeInDown.delay(400).duration(1000).springify()}>
-                        <Controller
-                            control={control}
-                            name="password"
-                            render={({ field: { onChange, onBlur, value } }) => (
-                                <View style={{ marginBottom: 20 }}>
-                                    <TextInput
-                                        placeholder="Mật khẩu"
-                                        placeholderTextColor="gray"
-                                        style={{
-                                            borderColor: errors.password ? 'red' : 'gray',
-                                            borderWidth: 1,
-                                            padding: 10,
-                                            backgroundColor: '#fff',
-                                            color: '#000',
-                                            borderRadius: 12,
-                                        }}
-                                        onBlur={onBlur}
-                                        onChangeText={onChange}
-                                        value={value}
-                                        secureTextEntry
-                                    />
-                                    {errors.password && <Text style={{ color: 'red' }}>{errors.password.message}</Text>}
-                                </View>
-                            )}
-                        />
-                    </Animated.View>
-
-                    <Animated.View entering={FadeInDown.delay(600).duration(1000).springify()}>
-                        <Button
-                            buttonStyle={{ backgroundColor: Colors.primary.green, borderRadius: 12, marginBottom: 10 }}
-                            title="Đăng nhập"
-                            onPress={handleSubmit(onSubmit)}
-                            // loading={true}
-                            // disabled={true}
-                        />
-                    </Animated.View>
-                    <Animated.Text
-                        entering={FadeInDown.delay(800).duration(1000).springify()}
-                        className="text-white font-medium text-sm text-center"
-                    >
-                        Bạn chưa có tài khoản?{' '}
-                        <Text
-                            onPress={() => onChangeForm()}
-                            style={{ fontWeight: '700', fontSize: 14, color: Colors.primary.green }}
-                        >
-                            Đăng ký
-                        </Text>
-                    </Animated.Text>
-                </View>
+                        Đăng ký
+                    </Text>
+                </Animated.Text>
+            </View>
             {/* </KeyboardAvoidingView> */}
-        </SafeAreaView>
+        </View>
     );
 };
 

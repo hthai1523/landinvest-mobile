@@ -6,10 +6,13 @@ import CustomButton from '../ui/Button';
 import Colors from '@/constants/Colors';
 import { usePaginatedList } from '@/hooks/usePaginatedList';
 import { Post } from '@/constants/interface';
+import { useLocalSearchParams } from 'expo-router';
 
-const NewestPost = () => {
+const NewestPost = ({newestPost}: {newestPost: any}) => {
     const { dataList, isLoading, totalPage, page, flatListRef, handlePageChange, getVisiblePages } =
         usePaginatedList<Post>(ViewlistPost);
+
+    
 
     return (
         <>
@@ -19,11 +22,12 @@ const NewestPost = () => {
                 <>
                     <FlatList
                         ref={flatListRef}
-                        data={dataList}
-                        keyExtractor={(item, index) => index.toString()}
+                        data={newestPost ? [newestPost, dataList] : dataList}
                         renderItem={({ item }) => <PostProfileSection post={item} />}
+                        keyExtractor={(_, index) => index.toString()}
                         numColumns={1}
                         scrollEnabled={false}
+                        contentContainerStyle={{ padding: 12 }}
                     />
                     <View className="flex flex-row justify-center items-center space-x-2 mt-2">
                         <CustomButton

@@ -60,6 +60,7 @@ export const usePaginatedList = <T,>(
 
     return {
         dataList,
+        setDataList,
         isLoading,
         totalPage,
         page,

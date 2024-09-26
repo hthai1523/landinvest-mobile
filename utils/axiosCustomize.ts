@@ -18,7 +18,6 @@ const handleRefreshToken = async () => {
       if (res && res.data) {
           const newAccessToken = res.data.access_token;
           
-          // Cập nhật chỉ access token mới trong Zustand store
           useAuthStore.getState().setTokens(newAccessToken, refreshToken);
           return newAccessToken;
       }

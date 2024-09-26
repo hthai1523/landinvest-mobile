@@ -24,6 +24,7 @@ const HotPostInDay = () => {
                         renderItem={({ item }) => <PostProfileSection post={item} />}
                         numColumns={1}
                         scrollEnabled={false}
+                        contentContainerStyle={{padding: 12}}
                     />
                     <View className="flex flex-row justify-center items-center space-x-2 mt-2">
                         <CustomButton

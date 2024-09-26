@@ -6,10 +6,10 @@ import PostProfileSection from './PostProfileSection';
 const PostsPersonal = () => {
     return (
         <View className=" px-2">
-           <PostProfileSection post={null}  />
+           {/* <PostProfileSection post={null}  />
            <PostProfileSection post={null} />
            <PostProfileSection post={null} />
-           <PostProfileSection post={null} />
+           <PostProfileSection post={null} /> */}
         </View>
     );
 };

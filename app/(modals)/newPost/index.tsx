@@ -19,6 +19,9 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import { usePostStore } from '@/store/postNewStore';
+import useAuthStore from '@/store/authStore';
+import { Avatar } from '@rneui/themed';
+import { useDebouncedCallback } from 'use-debounce';
 
 const { width } = Dimensions.get('window');
 const imageMargin = 5;
@@ -30,6 +33,7 @@ const Page = () => {
     const [currentTag, setCurrentTag] = useState('#'); // Current tag being typed
 
     const { value, images, setValue, addImage, removeImage, addTag, removeTag } = usePostStore();
+    const user = useAuthStore.getState().user;
 
     const handleSheetChanges = (index: number) => {
         setIsExpanded(index > 0);
@@ -49,7 +53,7 @@ const Page = () => {
                         const base64 = await FileSystem.readAsStringAsync(asset.uri, {
                             encoding: FileSystem.EncodingType.Base64,
                         });
-                        return `data:image/jpeg;base64,${base64}`;
+                        return `${base64}`;
                     }),
                 );
 
@@ -73,12 +77,12 @@ const Page = () => {
         }
     };
 
-    const handleInputChange = (name: keyof typeof value, text: string) => {
+    const handleInputChange = useDebouncedCallback((name: keyof typeof value, text: string) => {
         setValue({
             ...value,
             [name]: text,
         });
-    };
+    }, 500);
 
     const handleRemoveTag = (index: number) => {
         Alert.alert('Xóa tag này', '', [
@@ -99,7 +103,7 @@ const Page = () => {
 
     const renderTags = useCallback(() => {
         return (
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap' }} className='space-x-1'>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap' }} className="space-x-1">
                 {value.tags.map((tag, index) => (
                     <TouchableOpacity
                         onLongPress={() => handleRemoveTag(index)}
@@ -118,6 +122,8 @@ const Page = () => {
             </View>
         );
     }, [value.tags]);
+
+    console.log(user);
 
     const renderImages = () => {
         const imageCount = images.length;
@@ -140,7 +146,10 @@ const Page = () => {
             <View style={containerStyle}>
                 {images.map((image, index) => (
                     <View key={index} style={[imageStyle, { position: 'relative' }]}>
-                        <CustomImage source={{ uri: image }} style={{ width: '100%', height: '100%' }} />
+                        <CustomImage
+                            source={{ uri: `data:image/jpeg;base64,${image}` }}
+                            style={{ width: '100%', height: '100%' }}
+                        />
                         <TouchableOpacity
                             style={{
                                 position: 'absolute',
@@ -173,11 +182,23 @@ const Page = () => {
                     keyboardDismissMode="on-drag"
                 >
                     <View className="flex flex-row items-center space-x-2 p-2">
-                        <CustomImage
-                            source={require('@/assets/images/avatar.png')}
-                            className="w-10 h-10 rounded-full bg-[#F9DFC0]"
-                        />
-                        <Text className="text-white text-base font-semibold">Hoàng Tiến Thái</Text>
+                        {user?.avatarLink ? (
+                            <CustomImage
+                                source={{ uri: user?.avatarLink }}
+                                className="w-10 h-10 rounded-full bg-[#F9DFC0]"
+                            />
+                        ) : (
+                            <Avatar
+                                title={user?.FullName ? user.FullName.slice(0, 1) : 'T'}
+                                containerStyle={{
+                                    backgroundColor: Colors.primary.green,
+                                    borderRadius: 99999,
+                                    width: 40,
+                                    height: 40,
+                                }}
+                            />
+                        )}
+                        <Text className="text-white text-base font-semibold">{user?.FullName}</Text>
                     </View>
                     <View
                         style={{ flex: 1, backgroundColor: 'white', padding: 10, borderRadius: 10 }}
@@ -188,7 +209,7 @@ const Page = () => {
                             placeholder="Tiêu đề"
                             placeholderTextColor="#c9c9c9"
                             className="text-black font-bold text-base"
-                            value={value.title}
+                            // value={value.title}
                             onChangeText={(text) => handleInputChange('title', text)}
                         />
 
@@ -209,7 +230,7 @@ const Page = () => {
                             multiline
                             numberOfLines={10}
                             className="font-normal text-sm"
-                            value={value.content}
+                            // value={value.content}
                             onChangeText={(text) => handleInputChange('content', text)}
                         />
                         {renderImages()}

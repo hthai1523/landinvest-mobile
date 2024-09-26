@@ -52,7 +52,6 @@ const TabLayout = () => {
                     tabBarActiveTintColor: '#fff',
                     tabBarInactiveTintColor: '#fff',
                     tabBarLabel: () => null,
-                
                 }}
             >
                 {['index', 'notify', 'group', 'auction', 'profile'].map((screen, index) => (

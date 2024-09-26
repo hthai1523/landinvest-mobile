@@ -37,7 +37,7 @@ const SignUpForm = ({ onChangeForm }: { onChangeForm: () => void }) => {
                                 borderColor: errors[name] ? 'red' : 'gray',
                                 borderWidth: 1,
                                 padding: 10,
-                                backgroundColor: '#fff',
+                                backgroundColor: '#f5f5f5',
                                 color: '#000',
                                 borderRadius: 12,
                             }}

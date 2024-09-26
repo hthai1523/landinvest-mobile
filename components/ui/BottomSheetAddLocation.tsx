@@ -68,27 +68,29 @@ const BottomSheetAddLocation = forwardRef<Ref, BottomSheetAddLocationProps>(({ d
                     />
                     <CustomButton title="Tải ảnh" className="py-3 rounded-md" type="secondary" />
                 </View>
-                <Controller
-                    control={control}
-                    name="price"
-                    render={({ field: { onChange, onBlur, value } }) => (
-                        <>
-                            <View className="bg-[#3e6b00] p-2 rounded-md mb-2 flex flex-row items-center justify-between">
-                                <TextInput
-                                    placeholder="Giá tiền"
-                                    placeholderTextColor={'white'}
-                                    style={{ color: 'white', flex: 1 }} // Style text to be visible on the background
-                                    onBlur={onBlur}
-                                    onChangeText={(text) => onChange(text ||"0")}
-                                    value={formatToVND(value.toString()) || ""}
-                                    keyboardType="numeric" // Ensure numeric input
-                                />
-                                <DollarIcon />
-                            </View>
-                            {errors.price && <Text style={{ color: 'red' }}>{errors.price?.message}</Text>}
-                        </>
-                    )}
-                />
+                <View>
+                    <Controller
+                        control={control}
+                        name="price"
+                        render={({ field: { onChange, onBlur, value } }) => (
+                            <>
+                                <View className="bg-[#3e6b00] p-2 rounded-md mb-2 flex flex-row items-center justify-between">
+                                    <TextInput
+                                        placeholder="Giá tiền"
+                                        placeholderTextColor={'white'}
+                                        style={{ color: 'white', flex: 1 }} // Style text to be visible on the background
+                                        onBlur={onBlur}
+                                        onChangeText={(text) => onChange(text || '0')}
+                                        // value={value.toString()}
+                                        keyboardType="numeric" // Ensure numeric input
+                                    />
+                                    <DollarIcon />
+                                </View>
+                                {errors.price && <Text style={{ color: 'red' }}>{errors.price?.message}</Text>}
+                            </>
+                        )}
+                    />
+                </View>
             </ScrollView>
         </BottomSheetModal>
     );

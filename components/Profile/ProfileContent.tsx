@@ -73,9 +73,9 @@ const ProfileContent = () => {
                     className="h-52 bg-[#d9d9d9]"
                 />
                 {user?.avatarLink ? (
-                    <CustomImage
-                        source={user.avatarLink}
-                        className="w-36 h-36 rounded-full absolute -bottom-9 left-2 border-2 border-[#EA942C]"
+                    <Image
+                        source={{ uri: user.avatarLink }}
+                        className="w-36 h-36 rounded-full absolute -bottom-9 left-2 border-2 border-[#212121]"
                     />
                 ) : (
                     <Avatar
@@ -96,11 +96,12 @@ const ProfileContent = () => {
                     <View className="space-y-2">
                         <Text className="text-white font-bold text-2xl">{user?.FullName}</Text>
                         <Text className="text-white text-sm">Email: {user?.Email}</Text>
+                        {user?.Phone && <Text className="text-white text-sm">Sđt: {user.Phone}</Text>}
                     </View>
                     {/* <TouchableOpacity>
                         <Ionicons name="settings-outline" size={24} color="#d9d9d9" />
                     </TouchableOpacity> */}
-                    <CustomButton title="Đăng xuất" onPress={handleLogout} type="danger" />
+                    {/* <CustomButton title="Đăng xuất" onPress={handleLogout} type="danger" /> */}
                 </View>
                 <View style={styles.tabContainer}>
                     <Pressable style={styles.tab} onPress={() => handlePress(0)}>

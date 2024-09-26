@@ -10,8 +10,8 @@ const Auth = () => {
     const [isLoginView, setIsLoginView] = useState(true);
 
     return (
-        <SafeAreaView style={{ flex: 1, justifyContent: 'center', padding: 16 }}>
-            <StatusBar hidden />
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#1e1e1e'}}>
+            <StatusBar style='light' />
             {isLoginView ? (
                 <LoginForm onChangeForm={() => setIsLoginView(false)} />
             ) : (

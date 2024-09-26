@@ -11,7 +11,6 @@ export default function Profile() {
     const segments = useSegments();
     const { user } = useAuthStore.getState();
 
-    console.log(user)
 
     const handleLogout = async () => {
         try {

@@ -4,6 +4,8 @@ import { Post } from '@/constants/interface';
 import CustomImage from '../ui/Image';
 import { calcDate } from '@/functions/calcDate';
 import { router } from 'expo-router';
+import { Avatar } from '@rneui/themed';
+import Colors from '@/constants/Colors';
 
 const PostProfileSection = ({ post }: { post: Post }) => {
 
@@ -13,7 +15,7 @@ const PostProfileSection = ({ post }: { post: Post }) => {
 
     return (
         <>
-            <TouchableOpacity onPress={() => router.navigate(`/listing/post/${post?.PostID}`)} style={styles.shadow} className="flex-row bg-[#262D34] p-2 rounded-xl shadow-md mb-4">
+            <TouchableOpacity onPress={() => router.navigate(`/listing/post/${post?.PostID}`)} style={styles.shadow} className="flex-row bg-[#262D34] p-2 rounded-xl mb-4">
                 <View className="flex-1 justify-start space-y-1">
                     <Text className="text-white font-semibold text-sm" numberOfLines={1} ellipsizeMode="tail">
                         {post?.Title || '[Nổi bật] Tư vấn - Trao đổi - Chia sẻ tư vấn thiết kế, thi công'}
@@ -30,20 +32,27 @@ const PostProfileSection = ({ post }: { post: Post }) => {
                         </View> */}
                         {post &&
                             post?.Hastags.length > 0 &&
-                            post.Hastags.map((item) => (
-                                <View className="bg-[#2C353D] w-fit p-1 rounded-md">
-                                    <Text>{item}</Text>
+                            post.Hastags.map((item, index) => (
+                                <View key={index} className="bg-[#2C353D] w-fit p-1 rounded-md">
+                                    <Text className='text-xs font-light text-[#f7f7f7]'>{item}</Text>
                                 </View>
                             ))}
                     </View>
                     
                     <View className="flex flex-row items-center space-x-2">
-                        <Image
-                            source={require('@/assets/images/avatar.png')}
+                        {post.avatarLink ? (
+                            <CustomImage
+                            source={{uri: post.avatarLink}}
                             className="w-8 h-8 rounded-lg border border-[#EA942C] bg-[#F9DFC0]"
                         />
+                        ) : (
+                            <Avatar
+                                title={post.FullName ? post.FullName.slice(0,1) : "T"}
+                                containerStyle={{backgroundColor: Colors.primary.green, borderRadius: 8, width: 32, height: 32}}
+                            />
+                        )}
                         <View>
-                            <Text className="text-white font-semibold text-sm ">Thai Hoang </Text>
+                            <Text className="text-white font-semibold text-sm ">{post.FullName || post.Username}</Text>
                             <Text className="text-white text-xs font-thin">{calcDate(post?.PostTime)}</Text>
                         </View>
                     </View>

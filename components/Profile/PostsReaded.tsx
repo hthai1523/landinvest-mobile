@@ -5,7 +5,7 @@ import PostProfileSection from './PostProfileSection';
 const PostsReaded = () => {
     return (
         <View className="px-2">
-            <PostProfileSection />
+            {/* <PostProfileSection /> */}
         </View>
     );
 };

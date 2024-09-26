@@ -1,6 +1,6 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
@@ -8,6 +8,9 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import Colors from '@/constants/Colors';
+import { TouchableOpacity } from 'react-native';
+import { Feather } from '@expo/vector-icons';
+import { Text } from 'react-native';
 
 export {
     // Catch any errors thrown by the Layout component.
@@ -62,8 +65,9 @@ function RootLayoutNav() {
                         />
                         <Stack.Screen name="(modals)/auth" options={{ headerShown: false, presentation: 'card' }} />
                         <Stack.Screen name="(modals)/search" options={{ presentation: 'card', headerShown: false }} />
+                        <Stack.Screen name="(modals)/setting" options={{ presentation: 'card', headerShown: false }} />
                         <Stack.Screen name="(modals)/newPost" options={{ presentation: 'card', headerShown: false }} />
-                        {/* <Stack.Screen name="listing/[id]" options={{hea}}/> */}
+                        <Stack.Screen name="listing/post/[id]" options={{ headerShown: false }} />
                     </Stack>
                 </SafeAreaProvider>
             </BottomSheetModalProvider>

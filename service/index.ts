@@ -1,4 +1,14 @@
-import { Post, UserPostNew, ViewAllGroupResponse, ViewAllPostResponse } from '@/constants/interface';
+import {
+    Comment,
+    ListTagResponse,
+    NumberInteractions,
+    Post,
+    UserLikePost,
+    UserPostNew,
+    ViewAllGroupResponse,
+    ViewAllPostResponse,
+} from '@/constants/interface';
+import { User } from '@/store/authStore';
 import instance from '@/utils/axiosCustomize';
 import removeAccents from 'remove-accents';
 
@@ -62,6 +72,15 @@ export const callForgotPassword = (email: string) => {
     return instance.post('/api/forgotPassword', {
         Email: email,
     });
+};
+
+export const ChangePassword = async ({ password, newPassword }: { password: string; newPassword: string }) => {
+    const payload = {
+        Password: password,
+        NewPassword: newPassword,
+    };
+    const { data } = await instance.patch(`/api/profile/change_password`, payload);
+    return data;
 };
 
 // API search quy hoạch
@@ -228,7 +247,7 @@ export const ViewlistPost = async (pageNumber: number): Promise<ViewAllPostRespo
     return data;
 };
 
-export const ViewHotPost = async (pageNumber: number) : Promise<ViewAllPostResponse> => {
+export const ViewHotPost = async (pageNumber: number): Promise<ViewAllPostResponse> => {
     const { data } = await instance.get(`/api/forum/view_allpost_sort_timeview_count/${pageNumber}`);
     return data;
 };
@@ -242,13 +261,18 @@ export const UpdatePost = (PostID: string, Title: string, Content: string) => {
     return instance.patch(`/api/forum/update_post/${PostID}`, { Title, Content });
 };
 
-export const FetchPostById = async (PostID: string) : Promise<Post[]> => {
-    const {data} = await instance.get(`/api/forum/view_post/${PostID}`);
-    return data
+export const FetchPostById = async (PostID: string): Promise<Post[]> => {
+    const { data } = await instance.get(`/api/forum/view_post/${PostID}`);
+    return data;
 };
 
 export const DeletePost = (PostID: string) => {
     return instance.delete(`/api/forum/delete_post/${PostID}`);
+};
+
+export const GetListTags = async (pageNum: number): Promise<ListTagResponse> => {
+    const { data } = await instance.get(`/api/forum/sort_hashtag/${pageNum}`);
+    return data;
 };
 
 // API like, comment, share
@@ -256,25 +280,38 @@ export const LikePost = (idUser: string, idPost: string) => {
     return instance.post(`/api/forum/like_post/${idUser}/${idPost}`);
 };
 
-export const ListUserLike = (idPost: string) => {
-    return instance.get(`/api/forum/list_user_like_post/${idPost}`);
+export const ListUserLike = async (idPost: string): Promise<UserLikePost[]> => {
+    const { data } = await instance.get(`/api/forum/list_user_like_post/${idPost}`);
+    return data;
 };
 
-export const numberInteractions = (idPost: string) => {
-    return instance.get(`/api/forum/number_info_post/${idPost}`);
+export const numberInteractions = async (idPost: string): Promise<NumberInteractions> => {
+    const { data } = await instance.get(`/api/forum/number_info_post/${idPost}`);
+    return data;
 };
 
 export const AllPostInfor = () => {
     return instance.get('/api/forum/all_post_info');
 };
 
+export const IsUserLikePost = async (userId: string, idPost: string) : Promise<{liked: boolean, status: number}> => {
+    const {data} = await instance.get(`/api/forum/check_user_like_post/${userId}/${idPost}`)
+    return data
+}
+
 // API comment post
-export const ViewlistComment = (PostID: string) => {
-    return instance.get(`/api/post/comments/${PostID}`);
+export const ViewlistComment = async (PostID: string): Promise<Comment[]> => {
+    const { data } = await instance.get(`/api/post/comments/${PostID}`);
+    return data;
 };
 
-export const CreateComment = (PostID: string, Content: string, Images: string[]) => {
-    return instance.post(`/api/post/add_comment/${PostID}`, { Content, Images });
+export const CreateComment = async (PostID: string, Content: string, Images: string[]) => {
+    const payload = {
+        Content,
+        Images
+    }
+    const {data} = await instance.post(`/api/post/add_comment/${PostID}`, payload);
+    return data
 };
 
 export const UpdateComment = (CommentID: string, Content: string, PhotoURL: string) => {
@@ -313,8 +350,8 @@ export const callGetAllUsers = () => {
 };
 
 export const ViewProfileUser = async (USERID: string) => {
-    const {data} = await instance.get(`/api/private/profile/${USERID}`);
-    return data
+    const { data } = await instance.get(`/api/private/profile/${USERID}`);
+    return data;
 };
 
 export const CheckUserOnline = (USERID: string) => {
@@ -325,18 +362,21 @@ export const BlockUserPost = (USERID: string) => {
     return instance.patch(`/api/forum/block_user/${USERID}`);
 };
 
-export const UpdateProfileUser = (
-    USERID: string,
-    fullname: string,
-    gender: string,
-    email: string,
-    ipAddress: string,
-) => {
-    const payload = {
-        FullName: fullname,
-        Gender: gender,
-        Email: email,
-        LastLoginIP: ipAddress,
-    };
-    return instance.patch(`/api/private/profile/update/${USERID}`, payload);
+export const UpdateProfileUser = (data: Partial<User>) => {
+    return instance.patch(`/api/profile/updateprofile`, data);
+};
+
+export const GetUserProfile = async (idUser: string): Promise<User> => {
+    const { data } = await instance.get(`/api/profile/other_user/${idUser}`);
+    return data.data;
+};
+
+export const ChangeAvatarUser = async (idUser: string, formData: any) => {
+    const { data } = await instance.post(`/api/profile/update_image/${idUser}`, formData, {
+        headers: {
+            Accept: 'application/json',
+            'Content-Type': 'multipart/form-data',
+        },
+    });
+    return data;
 };

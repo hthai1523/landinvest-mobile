@@ -7,9 +7,10 @@ import {
     Pressable,
     Dimensions,
     StyleSheet,
+    Alert,
 } from 'react-native';
 import React, { useRef, useState } from 'react';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import Animated, {
     useSharedValue,
     useAnimatedStyle,
@@ -27,6 +28,7 @@ import NewestPost from '@/components/Group/NewestPost';
 import HotPostInDay from '@/components/Group/HotPostInDay';
 import GroupPost from '@/components/Group/GroupPost';
 import { Ionicons } from '@expo/vector-icons';
+import useAuthStore from '@/store/authStore';
 
 const width = Dimensions.get('screen').width;
 
@@ -35,6 +37,9 @@ const Group = () => {
     const tabsRef = useRef<Array<View | null>>([]);
     const indicatorWidth = useSharedValue(0);
     const indicatorPosition = useSharedValue(0);
+
+    const isAuthenticated = useAuthStore.getState().isAuthenticated;
+    const {newestPost} = useLocalSearchParams()
 
     const tabs = [
         { id: 0, title: 'Tin mới nhất' },
@@ -72,20 +77,25 @@ const Group = () => {
         }
     };
 
+    const handleToNewPost = () => {
+        if (isAuthenticated) {
+            router.push('/(modals)/newPost/');
+        } else {
+            Alert.alert('Bạn phải đăng nhập để đăng bài');
+        }
+    };
+
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: Colors.primary.background }}>
             <ScrollView ref={scrollRef} className="space-y-5" contentContainerStyle={{ paddingVertical: 16 }}>
                 <View className="flex flex-row items-center space-x-3 h-10 px-4">
                     <TouchableOpacity onPress={() => router.navigate('/profile')}>
-                        <CustomImage
+                        <CustomImage    
                             source={require('@/assets/images/avatar.png')}
                             className="w-10 h-full rounded-full bg-[#F9DFC0]"
                         />
                     </TouchableOpacity>
-                    <TouchableOpacity
-                        onPress={() => router.push('/(modals)/newPost')}
-                        className="bg-[#262D34] rounded-lg flex-1 h-full"
-                    >
+                    <TouchableOpacity onPress={handleToNewPost} className="bg-[#262D34] rounded-lg flex-1 h-full">
                         <Text className="p-2 font-light text-sm text-[#d9d9d9]">Bạn đang nghĩ gì</Text>
                     </TouchableOpacity>
                     <CustomButton type="primary" title="Đăng bài" className="h-full p-3" />
@@ -110,15 +120,13 @@ const Group = () => {
                     ))}
                     <Animated.View style={[styles.indicator, animatedStyles]} />
                 </View>
-                <View className="px-2">
-                    {activeTab === 0 && <NewestPost />}
-                    {activeTab === 1 && <HotPostInDay />}
-                    {activeTab === 2 && <GroupPost />}
-                </View>
+                {activeTab === 0 && <NewestPost newestPost={newestPost} />}
+                {activeTab === 1 && <HotPostInDay />}
+                {activeTab === 2 && <GroupPost />}
 
-                {/* <View className='px-4'>
+                <View className="p-3">
                     <HotTagsContent />
-                </View> */}
+                </View>
             </ScrollView>
 
             <Animated.View style={[buttonToTopStyle, { position: 'absolute', bottom: 80, right: 20 }]}>

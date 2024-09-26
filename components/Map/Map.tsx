@@ -169,6 +169,7 @@ const Map = ({ opacity, lat, lon, setLocationInfo, locationInfo }: MapInterface)
                 try {
                     const data = await mapRef.current.addressForCoordinate(location);
                     if (data) {
+                        console.log(data)
                         setDistrictName(data.subAdministrativeArea || '');
                         setLocationInfo(data as LocationData); // Casting to LocationData interface
                     }
@@ -208,6 +209,7 @@ const Map = ({ opacity, lat, lon, setLocationInfo, locationInfo }: MapInterface)
                 if (!districtName) return;
                 const apiName = removeAccents(districtName.toLowerCase());
                 const { data } = await axios.get(`https://apilandinvest.gachmen.org/quyhoach/search/${apiName}`);
+                
                 doSetDistrictId(data.Posts[0].idDistrict);
             } catch (error) {
                 console.error('Error fetching data:', error);

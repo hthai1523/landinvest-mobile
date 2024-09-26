@@ -25,6 +25,7 @@ const GroupPost = () => {
                         renderItem={({ item }) => <GroupPostSection group={item} />}
                         numColumns={1}
                         scrollEnabled={false}
+                        contentContainerStyle={{padding: 12}}
                     />
                     <View className="flex flex-row justify-center items-center space-x-2 mt-2">
                         <CustomButton

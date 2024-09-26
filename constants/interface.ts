@@ -101,6 +101,9 @@ interface UserDetails {
 
 export interface Post {
     Content: string;
+    FullName: string;
+    Username: string;
+    avatarLink: string | null;
     FavoriteNumber: number;
     GroupID: number;
     Hastags: string[];
@@ -113,15 +116,16 @@ export interface Post {
     Title: string;
     UpdatePostAt: string | null;
     UserID: number;
+    view: number;
 }
 
 export interface UserPostNew {
-    GroupID: number
-    Title: string
-    Content: string
-    PostLatitude: number
-    PostLongitude: number
-    Images: string[]
+    GroupID: number;
+    Title: string;
+    Content: string;
+    PostLatitude: number;
+    PostLongitude: number;
+    Images: string[];
 }
 
 export interface ViewAllPostResponse {
@@ -142,6 +146,50 @@ export interface Group {
 
 export interface ViewAllGroupResponse {
     data: Group[];
+    message: string;
+    numberItem: number;
+    numberPage: number;
+    status: number | 200 | 400;
+}
+
+export interface Comment {
+    Avatar: string;
+    CmtPhoto: string[] | null;
+    Images?: string[] | null;
+    CommentID: number;
+    CommentTime: string;
+    CommentUpdateTime: string;
+    Content: string;
+    FavoriteCount: number;
+    FullName: string;
+    PostID: number;
+    UserID: number;
+    Username: string;
+}
+
+export interface UserLikePost {
+    avatar: string;
+    fullName: string;
+    idLike: number;
+    idUser: number;
+    username: string;
+}
+
+export interface NumberInteractions {
+    TotalComment: number;
+    TotalLike: number;
+    TotalShare: number;
+}
+
+export interface ListTag {
+    Hastag: string;
+    count_number: number;
+    create_at: string;
+    idUser_create_hashtag: number;
+}
+
+export interface ListTagResponse {
+    data: ListTag[];
     message: string;
     numberItem: number;
     numberPage: number;
