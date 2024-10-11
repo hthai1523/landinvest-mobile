@@ -85,7 +85,6 @@ const TabLayout = () => {
                     />
                 ))}
             </Tabs>
-
         </>
     );
 };

@@ -65,15 +65,14 @@ const Page = () => {
     };
 
     const handleTagInput = (text: string) => {
-        // Check if space is pressed
         if (text.endsWith(' ')) {
             const newTag = currentTag.trim();
             if (newTag.length > 1) {
-                addTag(newTag); // Add the tag to store
+                addTag(newTag); 
             }
-            setCurrentTag('#'); // Reset current tag to start with #
+            setCurrentTag('#'); 
         } else {
-            setCurrentTag(text); // Update tag input
+            setCurrentTag(text); 
         }
     };
 

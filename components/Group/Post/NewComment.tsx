@@ -1,8 +1,8 @@
-import { View, Text, TextInput, FlatList, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, TextInput, FlatList, TouchableOpacity, Alert, SafeAreaView } from 'react-native';
 import React, { useCallback, useState, forwardRef, useImperativeHandle } from 'react';
 import { AnimatedTextInput, AnimatedTouchableOpacity } from '@/components/ui/AnimatedComponents';
 import { useDebounce } from 'use-debounce';
-import { FadeInRight, FadeOutRight } from 'react-native-reanimated';
+import Animated, { FadeInRight, FadeOutRight, LinearTransition } from 'react-native-reanimated';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import Colors from '@/constants/Colors';
 import { CreateComment } from '@/service';
@@ -11,6 +11,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import { ActivityIndicator } from 'react-native';
 import useAuthStore from '@/store/authStore';
+import { Comment } from '@/constants/interface';
 
 interface NewCommentProps {
     postId: string;
@@ -23,19 +24,27 @@ const NewComment = forwardRef<TextInput, NewCommentProps>(({ postId, setCommentR
     const [images, setImages] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [isLoadingPost, setIsLoadingPost] = useState<boolean>(false);
-    const isLoggedIn = useAuthStore.getState().isAuthenticated
+    const isLoggedIn = useAuthStore.getState().isAuthenticated;
 
     const submitComment = useCallback(async () => {
         if (!isLoggedIn) {
-            Alert.alert("Bạn phải đăng nhập để bình luận")
-            return
+            Alert.alert('Bạn phải đăng nhập để bình luận');
+            return;
         }
         try {
             setIsLoadingPost(true);
-            const res = await CreateComment(postId, comment, images);
-            setCommentResponse(res.data);
-            setComment('');
-            setImages([]);
+            console.log(postId, comment, images);
+            if (postId && comment) {
+                const res = await CreateComment(postId, comment, images);
+                if (res.Status === 200) {
+                    setCommentResponse(res.data);
+                    console.log(res.data);
+                    setComment('');
+                    setImages([]);
+                }
+            } else {
+                Alert.alert("Vui lòng nhập nội dung bình luận")
+            }
         } catch (error) {
             Alert.alert('Bình luận không thành công vui lòng thử lại');
         } finally {
@@ -73,7 +82,7 @@ const NewComment = forwardRef<TextInput, NewCommentProps>(({ postId, setCommentR
     const removeImage = useCallback((index: number) => setImages((images) => images.filter((_, i) => i !== index)), []);
 
     const renderImages = (item: string, index: number) => (
-        <View>
+        <Animated.View layout={LinearTransition.springify().damping(80).stiffness(200)}>
             <CustomImage
                 source={{ uri: `data:image/jpeg;base64,${item}` }}
                 resizeMode="cover"
@@ -92,11 +101,11 @@ const NewComment = forwardRef<TextInput, NewCommentProps>(({ postId, setCommentR
             >
                 <Ionicons name="close" size={16} color="white" />
             </TouchableOpacity>
-        </View>
+        </Animated.View>
     );
 
     return (
-        <View className="bg-[#f9f9f9] rounded ">
+        <SafeAreaView className="bg-[#f9f9f9] rounded ">
             {isLoading ? (
                 <ActivityIndicator size={30} />
             ) : (
@@ -109,7 +118,10 @@ const NewComment = forwardRef<TextInput, NewCommentProps>(({ postId, setCommentR
                     showsHorizontalScrollIndicator={false}
                 />
             )}
-            <View className="flex flex-row items-center space-x-2 ">
+            <Animated.View
+                layout={LinearTransition.duration(300).springify().damping(80).stiffness(200)}
+                className="flex flex-row items-center space-x-2 "
+            >
                 <AnimatedTextInput
                     ref={ref}
                     className="bg-transparent px-2 py-3 flex-1"
@@ -135,8 +147,8 @@ const NewComment = forwardRef<TextInput, NewCommentProps>(({ postId, setCommentR
                             <Feather name="send" size={24} color={Colors.primary.green} />
                         </AnimatedTouchableOpacity>
                     ))}
-            </View>
-        </View>
+            </Animated.View>
+        </SafeAreaView>
     );
 });
 

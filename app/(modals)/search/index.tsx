@@ -11,6 +11,7 @@ import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-na
 import Map from '@/components/Map/Map';
 import MapPreview from '@/components/Map/MapPreview';
 import Modal from 'react-native-modal';
+import { BlurView } from 'expo-blur';
 
 const NOMINATIM_BASE_URL = 'https://nominatim.openstreetmap.org/search?';
 const params = {
@@ -27,7 +28,6 @@ const Search = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [searchResult, setSearchResult] = useState<PlaceResult[]>([]);
     const [previewItem, setPreviewItem] = useState<PlaceResult | null>(null);
-    const [previewVisible, setPreviewVisible] = useState<boolean>(false);
 
     useEffect(() => {
         const handleGetData = async () => {
@@ -126,22 +126,34 @@ const Search = () => {
             </View>
 
             {previewItem && (
-                <Modal
-                    hasBackdrop={true}
-                    backdropOpacity={0.6}
-                    // hideModalContentWhileAnimating={true}
-                    animationIn={'fadeInUp'}
-                    animationOut={'fadeOut'}
-                    // useNativeDriverForBackdrop={true}
-                    // useNativeDriver={true}
-                    // animationInTiming={1}
-                    // animationOutTiming={1}
-                    // backdropTransitionInTiming={1}
-                    // backdropTransitionOutTiming={1}
-                    isVisible={true}
-                    onBackdropPress={closePreview}
-                >
-                  
+                <>
+                    <BlurView
+                        intensity={20}
+                        tint="regular"
+                        style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            zIndex: 1,
+                        }}
+                    />
+                    <Modal
+                        hasBackdrop={true}
+                        backdropOpacity={0}
+                        hideModalContentWhileAnimating={true}
+                        animationIn={'fadeInUp'}
+                        animationOut={'fadeOutDown'}
+                        useNativeDriverForBackdrop={true}
+                        useNativeDriver={true}
+                        animationInTiming={300}
+                        animationOutTiming={300}
+                        // backdropTransitionInTiming={1}
+                        // backdropTransitionOutTiming={1}
+                        isVisible={true}
+                        onBackdropPress={closePreview}
+                    >
                         <View
                             style={{
                                 backgroundColor: 'white',
@@ -158,7 +170,8 @@ const Search = () => {
                                 coordinates={previewItem.geojson?.coordinates}
                             />
                         </View>
-                </Modal>
+                    </Modal>
+                </>
             )}
         </SafeAreaView>
     );

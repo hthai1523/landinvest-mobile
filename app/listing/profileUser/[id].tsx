@@ -1,32 +1,29 @@
-import { ScrollView, Image, View, Text, Pressable, Dimensions, StyleSheet, ActivityIndicator } from 'react-native';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { ScrollView, Image, View, Text, Pressable, Dimensions, StyleSheet, Alert, FlatList } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import Colors from '@/constants/Colors';
-import PostsPersonal from './PostsPersonal';
-import PostsReaded from './PostsReaded';
-import { callLogout, GetUserPosted } from '@/service';
-import { Alert } from 'react-native';
-import { router, usePathname } from 'expo-router';
-import { TouchableOpacity } from 'react-native';
-import CustomImage from '../ui/Image';
-import CustomButton from '../ui/Button';
-import { Ionicons } from '@expo/vector-icons';
+
 import useAuthStore from '@/store/authStore';
 import { Avatar } from '@rneui/themed';
-import { Post } from '@/constants/interface';
-import { FlatList } from 'react-native';
-import PostProfileSection from './PostProfileSection';
+import { Post, UserInfor } from '@/constants/interface';
+import { useLocalSearchParams } from 'expo-router';
+import { GetUserInfo, GetUserPosted } from '@/service';
+import { StatusBar } from 'expo-status-bar';
+import CustomImage from '@/components/ui/Image';
+import PostProfileSection from '@/components/Profile/PostProfileSection';
+import PostsPersonal from '@/components/Profile/PostsPersonal';
+import PostsReaded from '@/components/Profile/PostsReaded';
 
 const { width } = Dimensions.get('window');
 
-const ProfileContent = () => {
+const Page = () => {
+    const { id } = useLocalSearchParams<{ id: string }>();
     const [activeTab, setActiveTab] = useState(0);
     const translateX = useSharedValue(0);
     const contentTranslateX = useSharedValue(0);
 
-    const { user, logout, userId } = useAuthStore.getState();
-   
-    
+    const [user, setUser] = useState<UserInfor>();
+    const [userPosted, setUserPosted] = useState<Post[]>([]);
 
     const handlePress = (index: number) => {
         setActiveTab(index);
@@ -40,9 +37,28 @@ const ProfileContent = () => {
         };
     });
 
+    const contentStyle = useAnimatedStyle(() => {
+        return {
+            transform: [{ translateX: contentTranslateX.value }],
+        };
+    });
+
+    useEffect(() => {
+        const fetchUserInfor = async () => {
+            try {
+                const data = await GetUserInfo(id);
+                setUser(data);
+            } catch (error) {
+                Alert.alert('Tìm kiếm người dùng thất bại', 'Vui lòng thử lại');
+            }
+        };
+
+        fetchUserInfor();
+    }, [id]);
+
     const RenderPostSectionProfile = () => {
         if (activeTab === 0) {
-            return <PostsPersonal />;
+            return <PostsPersonal userIdParams={parseInt(id)} />;
         }
         if (activeTab === 1) {
             return <PostsReaded />;
@@ -50,19 +66,21 @@ const ProfileContent = () => {
     };
 
     return (
-        <ScrollView>
+        <ScrollView contentContainerStyle={{paddingBottom: 12}}>
+            <StatusBar style="dark" />
             <View className="relative">
                 <Image source={require('@/assets/images/backgroundImage.png')} className="h-52 bg-[#d9d9d9]" />
                 {user?.avatarLink ? (
-                    <Image
+                    <CustomImage
                         source={{ uri: user.avatarLink }}
                         className="w-36 h-36 rounded-full absolute -bottom-9 left-2 border-2 border-[#212121]"
+                        sharedTransitionTag={`avatar-${user.userId}`}
                     />
                 ) : (
                     <Avatar
                         size={144}
                         rounded
-                        title={user?.Username.slice(0, 1).toLocaleUpperCase()}
+                        title={user?.FullName.slice(0, 1).toLocaleUpperCase()}
                         containerStyle={{
                             backgroundColor: Colors.primary.green,
                             position: 'absolute',
@@ -77,7 +95,6 @@ const ProfileContent = () => {
                     <View className="space-y-2">
                         <Text className="text-white font-bold text-2xl">{user?.FullName}</Text>
                         <Text className="text-white text-sm">Email: {user?.Email}</Text>
-                        {user?.Phone && <Text className="text-white text-sm">Sđt: {user.Phone}</Text>}
                     </View>
                     {/* <TouchableOpacity>
                         <Ionicons name="settings-outline" size={24} color="#d9d9d9" />
@@ -89,11 +106,11 @@ const ProfileContent = () => {
                         <Text style={[styles.text, activeTab === 0 && styles.activeText]}>Bài viết cá nhân</Text>
                     </Pressable>
                     <Pressable style={styles.tab} onPress={() => handlePress(1)}>
-                        <Text style={[styles.text, activeTab === 1 && styles.activeText]}>Bài viết đã xem</Text>
+                        <Text style={[styles.text, activeTab === 1 && styles.activeText]}>Bài viết đã chia sẻ</Text>
                     </Pressable>
                     <Animated.View style={[styles.indicator, indicatorStyle]} />
                 </View>
-                    <RenderPostSectionProfile />
+                <RenderPostSectionProfile />
             </View>
         </ScrollView>
     );
@@ -128,13 +145,10 @@ const styles = StyleSheet.create({
         position: 'absolute',
         bottom: 0,
     },
-    contentContainer: {
-        flexDirection: 'row',
-        width: '200%', // 2 tabs, mỗi tab chiếm 100% width
-    },
+
     content: {
         width: width,
     },
 });
 
-export default ProfileContent;
+export default Page;

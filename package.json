@@ -15,7 +15,6 @@
   "dependencies": {
     "@expo/vector-icons": "^14.0.2",
     "@gorhom/bottom-sheet": "^4.6.4",
-    "@hauvo/react-native-360-image-viewer": "^1.0.0",
     "@hookform/resolvers": "^3.9.0",
     "@react-native-async-storage/async-storage": "^1.23.1",
     "@react-native-community/netinfo": "^11.3.1",
@@ -24,7 +23,7 @@
     "@rneui/base": "^4.0.0-rc.7",
     "@rneui/themed": "^4.0.0-rc.8",
     "axios": "^1.7.5",
-    "expo": "~51.0.28",
+    "expo": "~51.0.36",
     "expo-blur": "~13.0.2",
     "expo-file-system": "~17.0.1",
     "expo-font": "~12.0.10",
@@ -36,6 +35,7 @@
     "expo-status-bar": "~1.12.1",
     "expo-system-ui": "~3.0.7",
     "expo-web-browser": "~13.0.3",
+    "millify": "^6.1.0",
     "nativewind": "^2.0.11",
     "react": "18.2.0",
     "react-dom": "18.2.0",
@@ -46,7 +46,7 @@
     "react-native-gesture-handler": "~2.16.1",
     "react-native-maps": "1.14.0",
     "react-native-modal": "^13.0.1",
-    "react-native-panorama": "^1.0.0",
+    "react-native-popup-menu": "^0.16.1",
     "react-native-reanimated": "~3.10.1",
     "react-native-safe-area-context": "4.10.5",
     "react-native-screens": "3.31.1",
@@ -56,7 +56,8 @@
     "remove-accents": "^0.5.0",
     "use-debounce": "^10.0.3",
     "zod": "^3.23.8",
-    "zustand": "^4.5.5"
+    "zustand": "^4.5.5",
+    "react-native-webview": "13.8.6"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

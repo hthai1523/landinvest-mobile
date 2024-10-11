@@ -3,11 +3,17 @@ import React from 'react';
 import { Group, Post } from '@/constants/interface';
 import CustomImage from '../ui/Image';
 import { calcDate } from '@/functions/calcDate';
+import { router } from 'expo-router';
 
 const GroupPostSection = ({ group }: { group: Group | null }) => {
     return (
         <>
-            <TouchableOpacity style={styles.shadow} className="flex-row bg-[#262D34] p-2  rounded-xl shadow-md mb-2">
+            <TouchableOpacity onPress={() => router.navigate({
+                pathname: '/listing/group/[id]',
+                params: {
+                    id: group?.GroupID.toString()
+                }
+            })} style={styles.shadow} className="flex-row bg-[#262D34] p-2  rounded-xl shadow-md mb-2">
                 <View className="flex-1 justify-start space-y-1">
                     <Text className="text-white font-semibold text-sm" numberOfLines={1} ellipsizeMode="tail">
                         {group?.GroupName || '[Nổi bật] Tư vấn - Trao đổi - Chia sẻ tư vấn thiết kế, thi công'}

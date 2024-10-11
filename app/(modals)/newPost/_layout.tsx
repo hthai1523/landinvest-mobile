@@ -1,6 +1,6 @@
 import { View, Text, TouchableOpacity, Alert } from 'react-native';
 import React, { useCallback, useEffect, useState } from 'react';
-import { router, Stack } from 'expo-router';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import Colors from '@/constants/Colors';
 import CustomButton from '@/components/ui/Button';
@@ -14,6 +14,9 @@ const NewPostLayout = () => {
     const { value, images, reset } = usePostStore();
     const [location, setLocation] = useState({ latitude: 105, longitude: 20 });
     const { setDataList } = usePaginatedList<Post>(ViewlistPost);
+
+    const {id} = useLocalSearchParams<{id: string}>()
+    
     const requestLocationPermission = useCallback(async () => {
         try {
             const { status } = await Location.requestForegroundPermissionsAsync();
@@ -55,7 +58,7 @@ const NewPostLayout = () => {
             }
 
             const params = {
-                GroupID: 22,
+                GroupID: +id || 22,
                 Title: value.title,
                 Content: value.content,
                 PostLongitude: location.longitude,

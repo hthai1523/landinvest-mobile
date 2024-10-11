@@ -31,7 +31,7 @@ export interface PlaceResult {
 
 export interface ImageLink {
     id: number;
-    imageUrl: string;
+    imageLink: string;
 }
 
 export interface ListMarker {
@@ -116,6 +116,7 @@ export interface Post {
     Title: string;
     UpdatePostAt: string | null;
     UserID: number;
+    timeView: number;
     view: number;
 }
 
@@ -158,7 +159,7 @@ export interface Comment {
     Images?: string[] | null;
     CommentID: number;
     CommentTime: string;
-    CommentUpdateTime: string;
+    CommentUpdateTime?: string;
     Content: string;
     FavoriteCount: number;
     FullName: string;
@@ -195,3 +196,33 @@ export interface ListTagResponse {
     numberPage: number;
     status: number | 200 | 400;
 }
+
+export interface UserInfor {
+    Email: string;
+    FullName: string;
+    UserName: string;
+    avatarLink: string | null;
+    userId: number;
+}
+
+export interface BoxInterface {
+    BoxID: number;
+    BoxName: string;
+    CreateAt: string;
+    Description: string;
+    UserID: number;
+    avatarLink: string | null;
+}
+
+export interface PayloadNewLocation {
+    idUser: string | number;
+    imageLink: string;
+    description: string | undefined;
+    longitude: number;
+    latitude: number;
+    priceOnM2: number;
+    idDistrict: string | number;
+    area: number;
+    typeArea: string;
+}
+

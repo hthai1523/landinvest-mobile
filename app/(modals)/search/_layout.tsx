@@ -30,7 +30,7 @@ const SearchLayout = () => {
                     headerLeft: () => (
                         <TouchableOpacity onPress={() => router.back()} className="flex flex-row items-center">
                             <Feather name="chevron-left" size={20} color="#d9d9d9" />
-                            <Text className="text-[#d9d9d9] ml-1 text-lg font-bold">Quay Lại</Text>
+                            <Text className="text-[#d9d9d9] ml-1 text-sm font-bold">Quay Lại</Text>
                         </TouchableOpacity>
                     ),
                     headerSearchBarOptions: {

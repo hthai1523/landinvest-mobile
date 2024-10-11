@@ -169,7 +169,6 @@ const Map = ({ opacity, lat, lon, setLocationInfo, locationInfo }: MapInterface)
                 try {
                     const data = await mapRef.current.addressForCoordinate(location);
                     if (data) {
-                        console.log(data)
                         setDistrictName(data.subAdministrativeArea || '');
                         setLocationInfo(data as LocationData); // Casting to LocationData interface
                     }
@@ -260,6 +259,7 @@ const Map = ({ opacity, lat, lon, setLocationInfo, locationInfo }: MapInterface)
             }
         }
     };
+
 
     useEffect(() => {
         if (!idDistrictForMarker) return;
@@ -358,7 +358,9 @@ const Map = ({ opacity, lat, lon, setLocationInfo, locationInfo }: MapInterface)
                         maximumZ={22}
                         opacity={opacity}
                         zIndex={-2}
+
                     />
+                    
                 )}
 
                 {polygon && (

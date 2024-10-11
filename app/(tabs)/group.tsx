@@ -29,6 +29,7 @@ import HotPostInDay from '@/components/Group/HotPostInDay';
 import GroupPost from '@/components/Group/GroupPost';
 import { Ionicons } from '@expo/vector-icons';
 import useAuthStore from '@/store/authStore';
+import AvatarUser from '@/components/ui/AvatarUser';
 
 const width = Dimensions.get('screen').width;
 
@@ -39,7 +40,8 @@ const Group = () => {
     const indicatorPosition = useSharedValue(0);
 
     const isAuthenticated = useAuthStore.getState().isAuthenticated;
-    const {newestPost} = useLocalSearchParams()
+    const user = useAuthStore.getState().user;
+    const { newestPost } = useLocalSearchParams();
 
     const tabs = [
         { id: 0, title: 'Tin mới nhất' },
@@ -90,15 +92,18 @@ const Group = () => {
             <ScrollView ref={scrollRef} className="space-y-5" contentContainerStyle={{ paddingVertical: 16 }}>
                 <View className="flex flex-row items-center space-x-3 h-10 px-4">
                     <TouchableOpacity onPress={() => router.navigate('/profile')}>
-                        <CustomImage    
-                            source={require('@/assets/images/avatar.png')}
-                            className="w-10 h-full rounded-full bg-[#F9DFC0]"
-                        />
+                        {
+                            isAuthenticated && user?.avatarLink ? (
+                                <AvatarUser avatarLink={user.avatarLink} />
+                            ) : (
+                                <AvatarUser avatarLink={require("@/assets/images/avatar.png")} />
+                            )
+                        }
                     </TouchableOpacity>
                     <TouchableOpacity onPress={handleToNewPost} className="bg-[#262D34] rounded-lg flex-1 h-full">
                         <Text className="p-2 font-light text-sm text-[#d9d9d9]">Bạn đang nghĩ gì</Text>
                     </TouchableOpacity>
-                    <CustomButton type="primary" title="Đăng bài" className="h-full p-3" />
+                    {/* <CustomButton type="primary" title="Đăng bài" className="h-full p-3" /> */}
                 </View>
                 <View className="flex flex-row items-center justify-between">
                     {tabs.map((tab, index) => (

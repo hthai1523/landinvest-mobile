@@ -1,9 +1,13 @@
 import { useEffect, useState, useRef } from 'react';
 import { FlatList } from 'react-native';
 
+type FetchDataFunction<T> = ((page: number) => Promise<{ data: T[]; numberPage: number }>) | 
+                            ((id: number , page: number) => Promise<{ data: T[]; numberPage: number }>);
+
 export const usePaginatedList = <T,>(
-    fetchData: (page: number) => Promise<{ data: T[]; numberPage: number }>,
+    fetchData: FetchDataFunction<T>,
     initialPage: number = 1,
+    id?: number
 ) => {
     const [dataList, setDataList] = useState<T[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -14,7 +18,12 @@ export const usePaginatedList = <T,>(
     const fetchDataForPage = async (pageNum: number) => {
         try {
             setIsLoading(true);
-            const res = await fetchData(pageNum);
+            let res;
+            if (id !== undefined && fetchData.length === 2) {
+                res = await (fetchData as (page: number, id: number) => Promise<{ data: T[]; numberPage: number }>)(pageNum, id);
+            } else {
+                res = await (fetchData as (page: number) => Promise<{ data: T[]; numberPage: number }>)(pageNum);
+            }
             setDataList(res.data);
             setTotalPage(Math.ceil(res.numberPage));
         } catch (error) {
@@ -26,7 +35,7 @@ export const usePaginatedList = <T,>(
 
     useEffect(() => {
         fetchDataForPage(page);
-    }, [page]);
+    }, [page, id]);
 
     const scrollToTop = () => {
         if (flatListRef.current) {

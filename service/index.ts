@@ -1,8 +1,12 @@
 import {
+    BoxInterface,
     Comment,
+    Group,
     ListTagResponse,
     NumberInteractions,
+    PayloadNewLocation,
     Post,
+    UserInfor,
     UserLikePost,
     UserPostNew,
     ViewAllGroupResponse,
@@ -74,12 +78,32 @@ export const callForgotPassword = (email: string) => {
     });
 };
 
-export const ChangePassword = async ({ password, newPassword }: { password: string; newPassword: string }) => {
+export const ChangePassword = async ({
+    password,
+    newPassword,
+}: {
+    password: string;
+    newPassword: string;
+}) => {
     const payload = {
         Password: password,
         NewPassword: newPassword,
     };
     const { data } = await instance.patch(`/api/profile/change_password`, payload);
+    return data;
+};
+
+// API User Infor
+export const GetUserInfo = async (id: string): Promise<UserInfor> => {
+    const { data } = await instance.get(`/api/get_user_by_userid/${id}`);
+    return data[0];
+};
+
+export const GetUserPosted = async (
+    id: string,
+    page: number,
+): Promise<{ data: Post[]; status: number; numberItem: number; numberPage: number }> => {
+    const { data } = await instance.get(`/api/forum/list_all_post_by_user/${id}/${page}`);
     return data;
 };
 
@@ -89,15 +113,21 @@ export const searchQueryAPI = (query: string) => {
 };
 
 // API box
-export const ViewlistBox = () => {
-    return instance.get('/api/box/viewlist_box');
+export const ViewlistBox = async (): Promise<BoxInterface[]> => {
+    const { data } = await instance.get('/api/box/viewlist_box');
+    return data;
 };
 
 export const CreateBox = (BoxName: string, Description: string, avatarLink: string) => {
     return instance.post('/api/box/add_box', { BoxName, Description, avatarLink });
 };
 
-export const UpdateBox = (BoxID: string, BoxName: string, Description: string, avatarLink: string) => {
+export const UpdateBox = (
+    BoxID: string,
+    BoxName: string,
+    Description: string,
+    avatarLink: string,
+) => {
     return instance.patch(`/api/box/update_box/${BoxID}`, { BoxName, Description, avatarLink });
 };
 
@@ -170,6 +200,14 @@ export const fetchDistrictByName = async (name: string) => {
     }
 };
 
+export const AddNewLocation = async (payload: PayloadNewLocation) => {
+    try {
+        const { data } = await instance.post('/api/location/add_info', payload);
+        return data;
+    } catch (error) {
+        throw new Error('Failed to add new location');
+    }
+};
 // API Auction
 export const fetchListHighestLocation = async (districtId: string) => {
     try {
@@ -248,7 +286,9 @@ export const ViewlistPost = async (pageNumber: number): Promise<ViewAllPostRespo
 };
 
 export const ViewHotPost = async (pageNumber: number): Promise<ViewAllPostResponse> => {
-    const { data } = await instance.get(`/api/forum/view_allpost_sort_timeview_count/${pageNumber}`);
+    const { data } = await instance.get(
+        `/api/forum/view_allpost_sort_timeview_count/${pageNumber}`,
+    );
     return data;
 };
 
@@ -294,24 +334,38 @@ export const AllPostInfor = () => {
     return instance.get('/api/forum/all_post_info');
 };
 
-export const IsUserLikePost = async (userId: string, idPost: string) : Promise<{liked: boolean, status: number}> => {
-    const {data} = await instance.get(`/api/forum/check_user_like_post/${userId}/${idPost}`)
-    return data
-}
-
-// API comment post
-export const ViewlistComment = async (PostID: string): Promise<Comment[]> => {
-    const { data } = await instance.get(`/api/post/comments/${PostID}`);
+export const IsUserLikePost = async (
+    userId: string,
+    idPost: string,
+): Promise<{ liked: boolean; status: number }> => {
+    const { data } = await instance.get(`/api/forum/check_user_like_post/${userId}/${idPost}`);
     return data;
 };
 
-export const CreateComment = async (PostID: string, Content: string, Images: string[]) => {
+// API comment post
+export const ViewlistComment = async (
+    PostID: string,
+    pageNum: number,
+): Promise<{ data: Comment[]; status: number; numberPage: number; total_item: number }> => {
+    const { data } = await instance.get(`/api/post/comments/${PostID}`, {
+        params: {
+            page: pageNum,
+        },
+    });
+    return data;
+};
+
+export const CreateComment = async (
+    PostID: string,
+    Content: string,
+    Images: string[],
+): Promise<{ Status: number; data: Comment; message: string }> => {
     const payload = {
         Content,
-        Images
-    }
-    const {data} = await instance.post(`/api/post/add_comment/${PostID}`, payload);
-    return data
+        Images,
+    };
+    const { data } = await instance.post(`/api/post/add_comment/${PostID}`, payload);
+    return data;
 };
 
 export const UpdateComment = (CommentID: string, Content: string, PhotoURL: string) => {
@@ -335,8 +389,20 @@ export const DeleteGroup = (GroupID: string) => {
     return instance.delete(`/api/group/remove_group/${GroupID}`);
 };
 
-export const ViewlistGroup = (BoxID: string) => {
-    return instance.get(`/api/group/all_group/${BoxID}`);
+export const ViewlistGroup = async (
+    BoxID: number,
+): Promise<
+    {
+        BoxID: number;
+        CreateAt: string;
+        GroupID: number;
+        GroupName: string;
+        UserID: number;
+        avatarLink: string;
+    }[]
+> => {
+    const { data } = await instance.get(`/api/group/all_group/${BoxID}`);
+    return data;
 };
 
 export const ViewListAllGroup = async (pageNum: number): Promise<ViewAllGroupResponse> => {
@@ -380,3 +446,54 @@ export const ChangeAvatarUser = async (idUser: string, formData: any) => {
     });
     return data;
 };
+
+// group
+export const GetGroupDetail = async (id: number): Promise<Group> => {
+    const { data } = await instance.get(`/api/group/view_group/${id}`);
+    return data[0];
+};
+
+export const GetPostByGroupId = async (
+    id: number,
+    page: number,
+): Promise<{ data: Post[]; status: number; numberItem: number; numberPage: number }> => {
+    const { data } = await instance.get(`/api/forum/group/${id}`, {
+        params: {
+            page,
+        },
+    });
+
+    return data;
+};
+
+export const CheckUserJoinGroup = async (idUser: number, idGroup: number) : Promise<{message: string, status: number}> => {
+    const {data} = await instance.get(`/api/group/check_user_join_group/${idUser}/${idGroup}`)
+    return data
+}
+
+export const JoinGroup =  async (idUser: number, idGroup: number) : Promise<{message: string, status: number}> => {
+    const {data} = await instance.post(`/api/group/join_group/${idUser}/${idGroup}`)
+    return data
+}
+
+export const LeaveGroup =  async (idUser: number, idGroup: number) : Promise<{message: string, status: number}> => {
+    const {data} = await instance.delete(`/api/group/leave_group/${idUser}/${idGroup}`)
+    return data
+}
+
+export const SearchUserInvite = async (userName: string) : Promise<{
+    data: {
+        avatarLink: string,
+        idUser: number,
+        username: string
+    }[],
+    status: number
+}>  => {
+    const {data} = await instance.get('/api/group/search_user', {
+        data: {
+            text: userName
+        }
+    })
+
+    return data
+}

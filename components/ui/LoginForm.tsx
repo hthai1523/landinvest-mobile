@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { View, Text, SafeAreaView, TextInput, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, SafeAreaView, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { useForm, Controller } from 'react-hook-form';
@@ -9,6 +9,7 @@ import Colors from '@/constants/Colors';
 import { z } from 'zod';
 import { callLogin } from '@/service';
 import useAuthStore from '@/store/authStore';
+import TextInput from 'react-native-text-input-interactive';
 
 import NetInfo from '@react-native-community/netinfo';
 import { router } from 'expo-router';
@@ -43,10 +44,13 @@ const LoginForm = ({ onChangeForm }: { onChangeForm: () => void }) => {
         mode: 'onBlur',
     });
 
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+
     const onSubmit = async (data: LoginFormSchema) => {
         const { userName, password } = data;
 
         try {
+            setIsLoading(true);
             const state = await NetInfo.fetch();
 
             if (state.isConnected && state.details) {
@@ -63,7 +67,9 @@ const LoginForm = ({ onChangeForm }: { onChangeForm: () => void }) => {
                 Alert.alert('Không có kết nối Internet');
             }
         } catch (error) {
-            Alert.alert('Gặp lỗi trong quá trình đăng nhập');
+            Alert.alert('Nhập sai tài khoản mật khẩu', 'Vui lòng thử lại');
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -98,8 +104,10 @@ const LoginForm = ({ onChangeForm }: { onChangeForm: () => void }) => {
                 />
             </View>
 
-            {/* <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}> */}
-            <View style={{ padding: 16, justifyContent: 'center', flex: 1 }}>
+            <KeyboardAvoidingView
+                style={{ flex: 1, padding: 16, justifyContent: 'center' }}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            >
                 <Animated.Text
                     entering={FadeInDown.duration(1000).springify()}
                     style={{
@@ -121,20 +129,19 @@ const LoginForm = ({ onChangeForm }: { onChangeForm: () => void }) => {
                             <>
                                 <TextInput
                                     placeholder="Tên đăng nhập"
-                                    placeholderTextColor="gray"
-                                    style={{
-                                        borderColor: errors.userName ? 'red' : 'gray',
-                                        borderWidth: 1,
-                                        padding: 10,
-                                        backgroundColor: '#f5f5f5',
-                                        color: '#000',
-                                        borderRadius: 12,
-                                    }}
                                     onBlur={onBlur}
                                     onChangeText={onChange}
                                     value={value}
                                     keyboardType="default"
                                     autoCapitalize="none"
+                                    textInputStyle={{
+                                        width: '100%',
+                                        borderColor: errors.userName && 'red',
+                                        borderWidth: 1,
+                                        borderRadius: 12,
+                                    }}
+                                    mainColor={Colors.primary.green}
+                                    placeholderTextColor={Colors.primary.green}
                                 />
                                 {errors.userName && <Text style={{ color: 'red' }}>{errors.userName.message}</Text>}
                             </>
@@ -150,19 +157,18 @@ const LoginForm = ({ onChangeForm }: { onChangeForm: () => void }) => {
                             <>
                                 <TextInput
                                     placeholder="Mật khẩu"
-                                    placeholderTextColor="gray"
-                                    style={{
-                                        borderColor: errors.password ? 'red' : 'gray',
-                                        borderWidth: 1,
-                                        padding: 10,
-                                        backgroundColor: '#f5f5f5',
-                                        color: '#000',
-                                        borderRadius: 12,
-                                    }}
                                     onBlur={onBlur}
                                     onChangeText={onChange}
                                     value={value}
                                     secureTextEntry
+                                    textInputStyle={{
+                                        width: '100%',
+                                        borderColor: errors.password && 'red',
+                                        borderWidth: 1,
+                                        borderRadius: 12,
+                                    }}
+                                    mainColor={Colors.primary.green}
+                                    placeholderTextColor={Colors.primary.green}
                                 />
                                 {errors.password && <Text style={{ color: 'red' }}>{errors.password.message}</Text>}
                             </>
@@ -175,8 +181,8 @@ const LoginForm = ({ onChangeForm }: { onChangeForm: () => void }) => {
                         buttonStyle={{ backgroundColor: Colors.primary.green, borderRadius: 12 }}
                         title="Đăng nhập"
                         onPress={handleSubmit(onSubmit)}
-                        // loading={true}
-                        // disabled={true}
+                        loading={isLoading}
+                        disabled={isLoading}
                     />
                 </Animated.View>
                 <Animated.Text
@@ -191,8 +197,7 @@ const LoginForm = ({ onChangeForm }: { onChangeForm: () => void }) => {
                         Đăng ký
                     </Text>
                 </Animated.Text>
-            </View>
-            {/* </KeyboardAvoidingView> */}
+            </KeyboardAvoidingView>
         </View>
     );
 };

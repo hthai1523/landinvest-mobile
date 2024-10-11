@@ -60,7 +60,7 @@ const PostDetailContent = ({ postDetail }: { postDetail: Post | undefined }) => 
                 // decelerationRate="fast"
                 ListFooterComponent={FooterButtons}
             />
-            {postDetail && <CommentPost idPost={postDetail.PostID}/>}
+            {/* {postDetail && <CommentPost idPost={postDetail.PostID}/>} */}
         </View>
     );
 };

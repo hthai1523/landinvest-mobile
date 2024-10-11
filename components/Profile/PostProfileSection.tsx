@@ -1,54 +1,89 @@
 import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
-import React from 'react';
-import { Post } from '@/constants/interface';
+import React, { memo, useEffect, useState } from 'react';
+import { NumberInteractions, Post } from '@/constants/interface';
 import CustomImage from '../ui/Image';
 import { calcDate } from '@/functions/calcDate';
 import { router } from 'expo-router';
 import { Avatar } from '@rneui/themed';
 import Colors from '@/constants/Colors';
+import { numberInteractions } from '@/service';
+import millify from 'millify';
 
 const PostProfileSection = ({ post }: { post: Post }) => {
-
+    const [numberInteraction, setNumberInteraction] = useState<NumberInteractions>();
     // const getUser = async (userId : string) => {
-    //     const data = await 
-    // }
+    //     const data = await
+    // }\
+
+    useEffect(() => {
+        const fetchNumberInteraction = async () => {
+            try {
+                const res = await numberInteractions(post.PostID);
+                setNumberInteraction(res);
+            } catch (error) {
+                console.log("loi", post.PostID);
+            }
+        };
+
+        fetchNumberInteraction();
+    }, [post.PostID]);
 
     return (
         <>
-            <TouchableOpacity onPress={() => router.navigate(`/listing/post/${post?.PostID}`)} style={styles.shadow} className="flex-row bg-[#262D34] p-2 rounded-xl mb-4">
+            <TouchableOpacity
+                onPress={() => router.push(`/listing/post/${post?.PostID}`)}
+                style={styles.shadow}
+                className="flex-row bg-[#262D34] p-2 rounded-xl mb-4"
+            >
                 <View className="flex-1 justify-start space-y-1">
                     <Text className="text-white font-semibold text-sm" numberOfLines={1} ellipsizeMode="tail">
                         {post?.Title || '[Nổi bật] Tư vấn - Trao đổi - Chia sẻ tư vấn thiết kế, thi công'}
                     </Text>
                     <View className="flex flex-row space-x-2 overflow-hidden">
-                        {/* <View className="bg-[#2C353D] w-fit p-1 rounded-md">
-                            <Text>#HaNoi</Text>
-                        </View>
-                        <View className="bg-[#2C353D] w-fit p-1 rounded-md">
-                            <Text>#HaNoi</Text>
-                        </View>
-                        <View className="bg-[#2C353D] w-fit p-1 rounded-md">
-                            <Text>#HaNoi</Text>
-                        </View> */}
-                        {post &&
-                            post?.Hastags.length > 0 &&
+                        {post && post.Hastags && post?.Hastags.length > 0 &&
                             post.Hastags.map((item, index) => (
                                 <View key={index} className="bg-[#2C353D] w-fit p-1 rounded-md">
-                                    <Text className='text-xs font-light text-[#f7f7f7]'>{item}</Text>
+                                    <Text className="text-xs font-light text-[#f7f7f7]">{item}</Text>
                                 </View>
                             ))}
                     </View>
-                    
+
+                    <View className="flex flex-row items-center space-x-2">
+                        <View className="bg-[#2c353d] p-1 rounded-md">
+                            <Text className="text-[#C5D0E6] font-normal text-[10px]">
+                                {millify(numberInteraction?.TotalLike ?? 0)} Like
+                            </Text>
+                        </View>
+                        <View className="bg-[#2c353d] p-1 rounded-md">
+                            <Text className="text-[#C5D0E6] font-normal text-[10px]">
+                                {numberInteraction?.TotalComment ?? 0} Bình luận
+                            </Text>
+                        </View>
+                        <View className="bg-[#2c353d] p-1 rounded-md">
+                            <Text className="text-[#C5D0E6] font-normal text-[10px]">
+                                {numberInteraction?.TotalShare ?? 0} Share
+                            </Text>
+                        </View>
+                        <View className="bg-[#2c353d] p-1 rounded-md">
+                            <Text className="text-[#C5D0E6] font-normal text-[10px]">{millify(post.timeView)} Xem</Text>
+                        </View>
+                    </View>
+
                     <View className="flex flex-row items-center space-x-2">
                         {post.avatarLink ? (
                             <CustomImage
-                            source={{uri: post.avatarLink}}
-                            className="w-8 h-8 rounded-lg border border-[#EA942C] bg-[#F9DFC0]"
-                        />
+                                source={{ uri: post.avatarLink }}
+                                className="w-10 h-10 rounded-lg border border-[#EA942C] bg-[#F9DFC0]"
+                            />
                         ) : (
                             <Avatar
-                                title={post.FullName ? post.FullName.slice(0,1) : "T"}
-                                containerStyle={{backgroundColor: Colors.primary.green, borderRadius: 8, width: 32, height: 32}}
+                                title={post.FullName ? post.FullName.slice(0, 1) : 'T'}
+                                containerStyle={{
+                                    backgroundColor: Colors.primary.green,
+                                    borderRadius: 8,
+                                    width: 40,
+                                    height: 40,
+                                }}
                             />
                         )}
                         <View>
@@ -58,7 +93,7 @@ const PostProfileSection = ({ post }: { post: Post }) => {
                     </View>
                 </View>
                 {post && post?.Images.length > 0 && (
-                    <CustomImage source={post.Images[0]} className="w-16 h-full rounded-md mr-2" />
+                    <CustomImage source={post.Images[0]} className="w-20 h-full rounded-md mr-2" />
                 )}
             </TouchableOpacity>
         </>
@@ -77,4 +112,4 @@ const styles = StyleSheet.create({
         elevation: 10,
     },
 });
-export default PostProfileSection;
+export default memo(PostProfileSection);

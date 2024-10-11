@@ -12,8 +12,6 @@ const NewestPost = ({newestPost}: {newestPost: any}) => {
     const { dataList, isLoading, totalPage, page, flatListRef, handlePageChange, getVisiblePages } =
         usePaginatedList<Post>(ViewlistPost);
 
-    
-
     return (
         <>
             {isLoading ? (

@@ -9,10 +9,11 @@ import {
     KeyboardAvoidingView,
     Platform,
     TextInput,
+    ActivityIndicator,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { FetchPostById, IsUserLikePost, LikePost, ListUserLike, numberInteractions } from '@/service';
-import { NumberInteractions, Post, UserLikePost } from '@/constants/interface';
+import { Comment, NumberInteractions, Post, UserLikePost } from '@/constants/interface';
 import CustomImage from '@/components/ui/Image';
 import { AntDesign, Feather, FontAwesome, Ionicons } from '@expo/vector-icons';
 import Colors from '@/constants/Colors';
@@ -28,6 +29,8 @@ import Animated, {
     useDerivedValue,
     FadeInRight,
     FadeOutRight,
+    FadeIn,
+    FadeOut,
 } from 'react-native-reanimated';
 import PostDetailContent from '@/components/PostDetail/PostDetailContent';
 import { StatusBar } from 'expo-status-bar';
@@ -45,7 +48,11 @@ import {
 } from '@/components/ui/AnimatedComponents';
 import { useDebounce } from 'use-debounce';
 import NewComment from '@/components/Group/Post/NewComment';
+import AvatarUser from '@/components/ui/AvatarUser';
+import { BlurView } from 'expo-blur';
 // import {} from '@react-navigation/native-stack'
+
+const Blur = Animated.createAnimatedComponent(BlurView);
 
 const width = Dimensions.get('window').width;
 const Page = () => {
@@ -59,6 +66,9 @@ const Page = () => {
     const [commentResponse, setCommentResponse] = useState<Comment | undefined>();
     const insets = useSafeAreaInsets();
     const commentInputRef = useRef<TextInput>(null);
+    const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
+
+    console.log(id)
 
     // Adjust these values based on your design preferences
     const HEADER_HEIGHT_EXPANDED = 85 + insets.top;
@@ -78,7 +88,9 @@ const Page = () => {
     const scrollHandler = useAnimatedScrollHandler({
         onScroll: (event) => {
             scrollY.value = event.contentOffset.y;
-            runOnJS(setStatusBarHidden)(event.contentOffset.y > 0);
+            if (insets.top > 105) {
+                runOnJS(setStatusBarHidden)(event.contentOffset.y > 0);
+            }
         },
     });
 
@@ -102,14 +114,12 @@ const Page = () => {
     }));
 
     const animatedLeftStyle = useAnimatedStyle(() => ({
-        opacity: withTiming(1 - progress.value),
+        opacity: withTiming(interpolate(scrollY.value, [0, SCROLL_THRESHOLD - 10], [1, 0], Extrapolation.CLAMP)),
     }));
 
     const animatedTitleStyle = useAnimatedStyle(() => ({
-        opacity: withTiming(progress.value),
+        opacity: withTiming(interpolate(scrollY.value, [0, SCROLL_THRESHOLD], [0, 1], Extrapolation.CLAMP)),
     }));
-
-    console.log(id);
 
     useEffect(() => {
         const fetchPost = async (id: string) => {
@@ -119,8 +129,6 @@ const Page = () => {
                 const res = await numberInteractions(id);
                 if (userId) {
                     const isLike = await IsUserLikePost(userId, id);
-
-                    console.log('da like', isLike);
                     setIsLiked(isLike.liked);
                 }
                 if (res) {
@@ -151,7 +159,7 @@ const Page = () => {
             // console.log(res)
             if (data.message === 'Unlike successful') {
                 setIsLiked(false);
-            } else setIsLiked(true)
+            } else setIsLiked(true);
         } else {
             Alert.alert('Vui lòng đăng nhập để like bài viết này', 'Ok', [
                 {
@@ -199,14 +207,30 @@ const Page = () => {
                     <Text className="ml-2 text-white">Comment</Text>
                 </TouchableOpacity>
                 <TouchableOpacity className="flex flex-row items-center">
-                    <FontAwesome name="share" size={24} color="white" />
-                    <Text className="ml-2 text-white">Share</Text>
+                    <Ionicons name="share-social-outline" size={24} color="white" />
+                    <Text className="ml-2 text-white">Chia sẻ</Text>
                 </TouchableOpacity>
             </View>
         </>
     );
     return (
         <View style={{ flex: 1, backgroundColor: Colors.primary.background }}>
+            {isMenuOpen && (
+                <Blur
+                    intensity={20}
+                    tint="dark"
+                    style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        zIndex: 1,
+                    }}
+                    entering={FadeIn.duration(200).springify()}
+                    exiting={FadeOut.duration(200)}
+                />
+            )}
             <StatusBar animated hidden={statusBarHidden} style="light" hideTransitionAnimation="fade" />
 
             {/* header */}
@@ -228,15 +252,16 @@ const Page = () => {
                         <Ionicons name="chevron-back" size={20} color={'#fff'} />
                     </TouchableOpacity>
                     <AnimatedTouchableOpacity
-                        // onPress={() => router.pus}
+                        onPress={() => router.navigate(`/listing/profileUser/${postDetail?.UserID}`)}
                         style={[animatedLeftStyle, { flexDirection: 'row', alignItems: 'center', marginLeft: 8 }]}
                     >
-                        <CustomImage
+                        {/* <CustomImage
                             source={require('@/assets/images/avatar.png')}
                             style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: '#F9DFC0' }}
-                        />
+                        /> */}
+                        <AvatarUser avatarLink={postDetail?.avatarLink} />
                         <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 18, marginLeft: 8 }}>
-                            {postDetail?.FullName || 'Thai Hoang'}
+                            {postDetail?.FullName || 'Ẩn danh'}
                         </Text>
                     </AnimatedTouchableOpacity>
                     <Animated.Text
@@ -268,24 +293,30 @@ const Page = () => {
             >
                 <View style={{ paddingTop: 16 }} />
                 {/* <PostDetailContent postDetail={postDetail} /> */}
-                <View style={{ paddingHorizontal: 12, marginBottom: 16 }}>
-                    <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 28 }}>{postDetail?.Title}</Text>
-                    <Text style={{ color: '#fff', fontSize: 14, marginTop: 8 }}>
-                        {calcDate(postDetail?.PostTime) || ''}
-                    </Text>
-                    <Text style={{ color: '#fff', fontSize: 16, marginTop: 16 }}>{postDetail?.Content}</Text>
-                </View>
-                <FlatList
-                    data={postDetail?.Images}
-                    renderItem={renderImage}
-                    keyExtractor={(item, index) => index.toString()}
-                    scrollEnabled={false}
-                    // showsVerticalScrollIndicator={true}
-                    // snapToInterval={width}
-                    // decelerationRate="fast"
-                    ListFooterComponent={FooterButtons}
-                />
-                <CommentPost idPost={id} commentNew={commentResponse} />
+                {isLoading ? (
+                    <ActivityIndicator size={30} />
+                ) : (
+                    <>
+                        <View style={{ paddingHorizontal: 12, marginBottom: 16 }}>
+                            <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 28 }}>{postDetail?.Title}</Text>
+                            <Text style={{ color: '#fff', fontSize: 14, marginTop: 8 }}>
+                                {calcDate(postDetail?.PostTime) || ''}
+                            </Text>
+                            <Text style={{ color: '#fff', fontSize: 16, marginTop: 16 }}>{postDetail?.Content}</Text>
+                        </View>
+                        <FlatList
+                            data={postDetail?.Images}
+                            renderItem={renderImage}
+                            keyExtractor={(item, index) => index.toString()}
+                            scrollEnabled={false}
+                            // showsVerticalScrollIndicator={true}
+                            // snapToInterval={width}
+                            // decelerationRate="fast"
+                            ListFooterComponent={FooterButtons}
+                        />
+                        <CommentPost idPost={id} commentNew={commentResponse} setIsMenuOpen={setIsMenuOpen} />
+                    </>
+                )}
             </AnimatedScrollView>
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
                 <NewComment ref={commentInputRef} postId={id} setCommentResponse={setCommentResponse} />
