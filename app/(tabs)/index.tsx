@@ -31,6 +31,8 @@ const Page = () => {
 
     const { lat, lon } = useSearchStore((state) => state);
 
+    
+
     const openBottomSheet = useCallback(() => {
         sheetRef.current?.present();
     }, []);

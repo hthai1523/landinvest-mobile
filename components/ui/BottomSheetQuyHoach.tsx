@@ -1,5 +1,5 @@
-import { View, Text, ScrollView, FlatList } from 'react-native';
-import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
+import { View, Text, ScrollView, FlatList, Platform } from 'react-native';
+import React, { forwardRef, memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { BottomSheetBackdrop, BottomSheetModal } from '@gorhom/bottom-sheet';
 import Checkbox from './Checkbox';
 import useFilterStore from '@/store/filterStore';
@@ -8,38 +8,162 @@ import useSearchStore from '@/store/searchStore';
 import axios from 'axios';
 import { QuyHoachResponse } from '@/constants/interface';
 import QuyHoachSection from '../BottomSheetQuyHoach/QuyHoachSection';
+import { fetchAllProvince, fetchDistrictsByProvinces } from '@/service';
+import TreeSelector from './TreeSelector';
+import { TreeDataTypes, TreeSelect } from 'react-native-tree-selection';
+import { TreeView, type TreeNode, type TreeViewRef } from 'react-native-tree-multi-select';
+import { SearchBar } from '@rneui/themed';
+import { Ionicons } from '@expo/vector-icons';
+import { useDebounce } from 'use-debounce';
+import { getBoundingBoxCenterFromString } from '@/functions/getBoundingBoxCenterFromString';
+import { router, useLocalSearchParams } from 'expo-router';
 
 export type Ref = BottomSheetModal;
 
 const BottomSheetQuyHoach = forwardRef<Ref, { dismiss: () => void }>((props, ref) => {
-    const snapPoints = useMemo(() => ['50%', '70%'], []);
+    const snapPoints = useMemo(() => ['50%', '80%'], []);
     const renderBackdrop = useCallback(
-        (props: any) => <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={1} />,
+        (props: any) => (
+            <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={1} />
+        ),
         [],
     );
 
-    const districtId = useSearchStore((state) => state.districtId);
-    const [listQuyHoach, setListQuyHoach] = useState<QuyHoachResponse[]>([]);
-    const [selectedIDQuyHoach, setSelectedIDQuyHoach] = useState<number[]>([]);
+    const [loading, setLoading] = useState<boolean>(false);
+    const [treeData, setTreeData] = useState<TreeNode[]>([]);
+    const [originalTreeData, setOriginalTreeData] = useState<TreeNode[]>([]);
+    const treeViewRef = React.useRef<TreeViewRef | null>(null);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [search, setSearch] = useState<string>('');
+    const [checkedKeys, setCheckedKeys] = useState<string[]>([]);
+    const [debouncedSearch] = useDebounce(search, 500);
+
+    const updateSearch = (value: string) => {
+        setSearch(value);
+        treeViewRef.current?.setSearchText(value, ['name']);
+    };
+
+    const { quyhoach, vitri } = useLocalSearchParams<{
+        quyhoach?: string;
+        vitri?: string;
+    }>();
+
+    const expandNodes = (idsToExpand: string[]) => treeViewRef.current?.expandNodes?.(idsToExpand);
+
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const { data } = await axios.get<QuyHoachResponse[]>(
-                    `https://apilandinvest.gachmen.org/quyhoach1quan/${districtId}`,
-                );
-                setListQuyHoach(data || []);
-            } catch (error) {
-                console.error('Error fetching data:', error);
-                setListQuyHoach([]);
-            }
-        };
-
-        fetchData();
-    }, [districtId]);
-
-    const handleChangeIDQuyHoach = useCallback((id: number) => {
-        setSelectedIDQuyHoach((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]));
+        fetchProvinces();
+        if (quyhoach) {
+            const quyhoachKeys = quyhoach.split(',').map((id) => `plan-${id}`);
+            setCheckedKeys(quyhoachKeys);
+        }
     }, []);
+
+    // console.log("checkedKeys", checkedKeys);
+
+    const fetchProvinces = async () => {
+        try {
+            setLoading(true);
+            const provinces = await fetchAllProvince();
+            const provincesData = await Promise.all(
+                provinces.map(async (province) => {
+                    const districts = await fetchDistricts(province.TinhThanhPhoID);
+                    if (districts.length > 0) {
+                        return {
+                            name: province.TenTinhThanhPho,
+                            id: `province-${province.TinhThanhPhoID}`,
+                            children: districts,
+                        };
+                    }
+                    return null;
+                }),
+            );
+            const filteredProvincesData = provincesData.filter((province) => province !== null);
+            setTreeData(filteredProvincesData);
+            setOriginalTreeData(filteredProvincesData);
+        } catch (error) {
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchDistricts = async (provinceId: number) => {
+        try {
+            const districts = await fetchDistrictsByProvinces(provinceId);
+            const districtDataWithPlanning = await Promise.all(
+                districts.map(async (district) => {
+                    const planningData = await fetchPlanningData(district.DistrictID);
+                    if (planningData.length > 0) {
+                        return {
+                            name: district.DistrictName,
+                            id: `district-${district.DistrictID}`,
+                            children: planningData,
+                        };
+                    }
+                    return null;
+                }),
+            );
+            return districtDataWithPlanning.filter((district) => district !== null);
+        } catch (error) {
+            return [];
+        }
+    };
+
+    const fetchPlanningData = async (districtId: number) => {
+        try {
+            const { data } = await axios.get<QuyHoachResponse[]>(
+                `https://apilandinvest.gachmen.org/quyhoach1quan/${districtId}`,
+            );
+            if (Array.isArray(data) && data.length > 0) {
+                return data.map((plan) => ({
+                    name: plan.description,
+                    id: `plan-${plan.id}`,
+                }));
+            }
+            return [];
+        } catch (error) {
+            // console.error('Error fetching planning data:', error);
+            return [];
+        }
+    };
+
+    const handleSelect = useCallback(async (checkedKeysValue: string[]) => {
+        if (!Array.isArray(checkedKeysValue)) return;
+        console.log('checkedkeyvalue', checkedKeysValue);
+
+        const quyhoachIds = checkedKeysValue
+            .filter((key) => key?.startsWith('plan-'))
+            .map((key) => key?.split('-')[1])
+            .filter((id) => id != null);
+        const districtIds = checkedKeysValue
+            .filter((key) => key?.startsWith('district-'))
+            .map((key) => key?.split('-')[1])
+            .filter((id) => id != null);
+
+        if (districtIds.length > 0 && quyhoachIds.length > 0) {
+            const id = districtIds[districtIds.length - 1];
+
+            try {
+                const { data } = await axios.get(
+                    `https://apilandinvest.gachmen.org/quyhoach1quan/${id}`,
+                );
+                const { centerLatitude, centerLongitude } = getBoundingBoxCenterFromString(
+                    data[0]?.boundingbox,
+                );
+                router.push({
+                    pathname: '/(tabs)/',
+                    params: {
+                        quyhoach: quyhoachIds.toString(),
+                        vitri: `${centerLatitude},${centerLongitude}`,
+                    },
+                });
+            } catch (error) {}
+        }
+    }, []);
+
+    const handleResetSearch = () => {
+        setSearch('');
+        setTreeData(originalTreeData);
+    };
 
     return (
         <BottomSheetModal
@@ -49,24 +173,68 @@ const BottomSheetQuyHoach = forwardRef<Ref, { dismiss: () => void }>((props, ref
             index={1}
             onDismiss={props.dismiss}
         >
-            {listQuyHoach.length > 0 ? (
-                <FlatList
-                    data={listQuyHoach}
-                    keyExtractor={(item) => item.id.toString()}
-                    renderItem={({ item }) => (
-                        <QuyHoachSection
-                            quyhoach={item}
-                            checked={selectedIDQuyHoach.includes(item.id)}
-                            onChange={() => handleChangeIDQuyHoach(item.id)}
+            <View className="flex-1">
+                {loading ? (
+                    <Text>Loading...</Text>
+                ) : (
+                    // <TreeSelector treeData={treeData} onSelect={handleSelect} />
+                    // <TreeSelect
+                    //     data={treeData}
+                    //     childKey="data"
+                    //     titleKey="title"
+                    //     onCheckBoxPress={(item) => console.log(item)}
+                    //     parentTextStyles={{ color: '#000' }}
+                    //     leftIconStyles={{ tintColor: '#000' }}
+                    //     rightIconStyles={{ tintColor: '#000' }}
+                    //     parentContainerStyles={{
+                    //         backgroundColor: 'transparent',
+                    //         width: '100%',
+                    //         flexDirection: 'row',
+                    //     }}
+                    //     childContainerStyles={{
+                    //         backgroundColor: 'transparent',
+                    //         width: '100%',
+                    //         flexDirection: 'row',
+                    //     }}
+                    //     childTextStyles={{ color: '#000' }}
+                    // />
+                    <>
+                        <SearchBar
+                            placeholder="Tìm kiếm..."
+                            onChangeText={updateSearch}
+                            value={search}
+                            containerStyle={{
+                                backgroundColor: 'transparent',
+                                borderBottomColor: 'transparent',
+                                borderTopColor: 'transparent',
+                            }}
+                            inputContainerStyle={{
+                                backgroundColor: '#f0f0f0',
+                            }}
+                            inputStyle={{
+                                color: '#333',
+                            }}
+                            searchIcon={<Ionicons name="search-outline" size={20} />}
+                            platform={Platform.OS === 'ios' ? 'ios' : 'android'}
+                            clearIcon={
+                                <Ionicons name="close-circle-outline" size={24} color={'#333'} />
+                            }
+                            // showLoading={isLoading}
+                            showCancel={false}
+                            onClear={() => handleResetSearch()}
+                            onCancel={() => handleResetSearch()}
                         />
-                    )}
-                    contentContainerStyle={{paddingHorizontal: 8, paddingTop: 12}}
-                />
-            ) : (
-                <Text className='text-center mt-4'>Không có quy hoạch tại quận này</Text>
-            )}
+                        <TreeView
+                            ref={treeViewRef}
+                            data={treeData}
+                            onCheck={(key) => handleSelect(key)}
+                            preselectedIds={['plan-64']}
+                        />
+                    </>
+                )}
+            </View>
         </BottomSheetModal>
     );
 });
 
-export default BottomSheetQuyHoach;
+export default memo(BottomSheetQuyHoach);

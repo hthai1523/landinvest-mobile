@@ -1,6 +1,14 @@
 import { View, StyleSheet, Image, Text, TouchableOpacity, Alert } from 'react-native';
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import MapView, { Callout, MapPressEvent, Marker, UrlTile, Region, Polygon, Polyline } from 'react-native-maps';
+import MapView, {
+    Callout,
+    MapPressEvent,
+    Marker,
+    UrlTile,
+    Region,
+    Polygon,
+    Polyline,
+} from 'react-native-maps';
 import useSearchStore from '@/store/searchStore';
 import axios from 'axios';
 import removeAccents from 'remove-accents';
@@ -18,7 +26,7 @@ import { Feather } from '@expo/vector-icons';
 import { BottomSheetModal, useBottomSheetModal } from '@gorhom/bottom-sheet';
 import BottomSheetAddLocation from '../ui/BottomSheetAddLocation';
 import useAuthStore from '@/store/authStore';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 
 interface MapInterface {
     opacity: number;
@@ -33,27 +41,43 @@ const Map = ({ opacity, lat, lon, setLocationInfo, locationInfo }: MapInterface)
 
     const { dismiss } = useBottomSheetModal();
     const sheetRef = useRef<BottomSheetModal>(null);
-    
+
     const [districtName, setDistrictName] = useState<string>('');
     const [idDistrictForMarker, setIdDistrictForMarker] = useState<number | null>();
     const [polygon, setPolygon] = useState<{ latitude: number; longitude: number }[] | null>(null);
-    const [selectedPolygon, setSelectedPolygon] = useState<{ latitude: number; longitude: number }[] | null>(null);
+    const [selectedPolygon, setSelectedPolygon] = useState<
+        { latitude: number; longitude: number }[] | null
+    >(null);
     const [selectedIDQuyHoach, setSelectedIDQuyHoach] = useState<number | null>(null);
-    const [selectedCoordinates, setSelectedCoordinates] = useState<{ latitude: number; longitude: number }[]>([]);
+    const [selectedCoordinates, setSelectedCoordinates] = useState<
+        { latitude: number; longitude: number }[]
+    >([]);
     const [isDraw, setIsDraw] = useState<boolean>(false);
     const [polygonArea, setPolygonArea] = useState<number | null>(null);
-    const [latLon, setLatLon] = useState<{lat: number, lon: number}>()
+    const [latLon, setLatLon] = useState<{ lat: number; lon: number }>();
+    const [quyhoachIds, setQuyhoachIds] = useState<number[]>([]);
 
     const listMarker = useMarkerStore((state) => state.listMarkers);
     const doSetDistrictId = useSearchStore((state) => state.doSetDistrictId);
     const selectedIdDistrict = useSearchStore((state) => state.districtId);
     const doSetListMarkers = useMarkerStore((state) => state.doSetListMarkers);
     const coordinates = useSearchStore((state) => state.coordinates);
-    const isLoggedIn = useAuthStore((state) => state.isAuthenticated)
+    const isLoggedIn = useAuthStore((state) => state.isAuthenticated);
     const { getAllFilter } = useFilterStore((state) => ({
         getAllFilter: state.getAllFilters,
     }));
     let filters = getAllFilter();
+
+    const { quyhoach, vitri } = useLocalSearchParams<{
+        quyhoach?: string;
+        vitri?: string;
+    }>();
+    useEffect(() => {
+        const newQuyhoachIds = quyhoach?.split(',').map((id) => parseInt(id, 10)) || [];
+
+        setQuyhoachIds(newQuyhoachIds);
+    }, [quyhoach]);
+    // console.log(quyhoach, typeof vitri);
 
     const [location, setLocation] = useState({
         latitude: 21.16972,
@@ -88,7 +112,10 @@ const Map = ({ opacity, lat, lon, setLocationInfo, locationInfo }: MapInterface)
         try {
             const { status } = await Location.requestForegroundPermissionsAsync();
             if (status !== 'granted') {
-                Alert.alert('Quyền bị từ chối', 'Cần có quyền truy cập vị trí để căn giữa bản đồ vào vị trí của bạn.');
+                Alert.alert(
+                    'Quyền bị từ chối',
+                    'Cần có quyền truy cập vị trí để căn giữa bản đồ vào vị trí của bạn.',
+                );
                 return false;
             }
             return true;
@@ -103,7 +130,9 @@ const Map = ({ opacity, lat, lon, setLocationInfo, locationInfo }: MapInterface)
         if (!hasPermission) return;
 
         try {
-            const location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+            const location = await Location.getCurrentPositionAsync({
+                accuracy: Location.Accuracy.High,
+            });
             const { latitude, longitude } = location.coords;
             setLocation({ latitude, longitude });
             moveToLocation(latitude, longitude); // Center the map
@@ -115,7 +144,7 @@ const Map = ({ opacity, lat, lon, setLocationInfo, locationInfo }: MapInterface)
     const handleMapPress = useCallback(
         (e: MapPressEvent) => {
             const { latitude, longitude } = e.nativeEvent.coordinate;
-            
+
             if (isDraw) {
                 setSelectedCoordinates((prevCoordinates = []) => {
                     if (!Array.isArray(prevCoordinates)) {
@@ -144,12 +173,13 @@ const Map = ({ opacity, lat, lon, setLocationInfo, locationInfo }: MapInterface)
             } else {
                 const isNearFilteredMarker = filteredMarkers.some((marker) => {
                     return (
-                        Math.abs(marker.latitude - latitude) < 0.0001 && Math.abs(marker.longitude - longitude) < 0.0001
+                        Math.abs(marker.latitude - latitude) < 0.0001 &&
+                        Math.abs(marker.longitude - longitude) < 0.0001
                     );
                 });
 
                 if (!isNearFilteredMarker) {
-                    setLatLon({ lat: latitude, lon: longitude })
+                    setLatLon({ lat: latitude, lon: longitude });
                     setLocation({ latitude, longitude });
                     moveToLocation(latitude, longitude);
                 }
@@ -194,7 +224,7 @@ const Map = ({ opacity, lat, lon, setLocationInfo, locationInfo }: MapInterface)
                         setSelectedIDQuyHoach(null);
                     }
                 } catch (error) {
-                    console.error('Error fetching district data:', error);
+                    // console.error('Error fetching district data:', error);
                 }
             }
         };
@@ -207,8 +237,10 @@ const Map = ({ opacity, lat, lon, setLocationInfo, locationInfo }: MapInterface)
             try {
                 if (!districtName) return;
                 const apiName = removeAccents(districtName.toLowerCase());
-                const { data } = await axios.get(`https://apilandinvest.gachmen.org/quyhoach/search/${apiName}`);
-                
+                const { data } = await axios.get(
+                    `https://apilandinvest.gachmen.org/quyhoach/search/${apiName}`,
+                );
+
                 doSetDistrictId(data.Posts[0].idDistrict);
             } catch (error) {
                 console.error('Error fetching data:', error);
@@ -248,18 +280,19 @@ const Map = ({ opacity, lat, lon, setLocationInfo, locationInfo }: MapInterface)
                     const districtName = data.subAdministrativeArea || '';
                     setLocationInfo(data as LocationData);
                     const apiName = removeAccents(districtName.toLowerCase());
-                    const response = await axios.get(`https://apilandinvest.gachmen.org/quyhoach/search/${apiName}`);
+                    const response = await axios.get(
+                        `https://apilandinvest.gachmen.org/quyhoach/search/${apiName}`,
+                    );
                     const newDistrictId = response.data.Posts[0]?.idDistrict;
                     setIdDistrictForMarker(newDistrictId || null);
                 } else {
                     console.log('No address found');
                 }
             } catch (error) {
-                console.error('Error fetching address or district ID:', error);
+                // console.error('Error fetching address or district ID:', error);
             }
         }
     };
-
 
     useEffect(() => {
         if (!idDistrictForMarker) return;
@@ -291,18 +324,21 @@ const Map = ({ opacity, lat, lon, setLocationInfo, locationInfo }: MapInterface)
     };
 
     const handleAddLocation = () => {
-        if(isLoggedIn) {
-
-            sheetRef.current?.present()
+        if (isLoggedIn) {
+            sheetRef.current?.present();
         } else {
-            Alert.alert("Bạn cần đăng nhập để thêm mảnh đất muốn bán", "Chuyển đến trang đăng nhập", [
-                {
-                    text: 'Ok',
-                    onPress: () => router.navigate('/(modals)/auth')
-                }
-            ])
+            Alert.alert(
+                'Bạn cần đăng nhập để thêm mảnh đất muốn bán',
+                'Chuyển đến trang đăng nhập',
+                [
+                    {
+                        text: 'Ok',
+                        onPress: () => router.navigate('/(modals)/auth'),
+                    },
+                ],
+            );
         }
-    }
+    };
 
     return (
         <>
@@ -349,7 +385,10 @@ const Map = ({ opacity, lat, lon, setLocationInfo, locationInfo }: MapInterface)
                 {selectedCoordinates &&
                     selectedCoordinates.length > 0 &&
                     selectedCoordinates.map((marker, index) => (
-                        <Marker key={index} coordinate={{ latitude: marker.latitude, longitude: marker.longitude }} />
+                        <Marker
+                            key={index}
+                            coordinate={{ latitude: marker.latitude, longitude: marker.longitude }}
+                        />
                     ))}
 
                 {selectedIDQuyHoach && (
@@ -358,10 +397,20 @@ const Map = ({ opacity, lat, lon, setLocationInfo, locationInfo }: MapInterface)
                         maximumZ={22}
                         opacity={opacity}
                         zIndex={-2}
-
                     />
-                    
                 )}
+
+                {quyhoachIds &&
+                    quyhoachIds.length > 0 &&
+                    quyhoachIds.map((item, index) => (
+                        <UrlTile
+                            key={index}
+                            urlTemplate={`https://apilandinvest.gachmen.org/get_api_quyhoach/${item}/{z}/{x}/{y}`}
+                            maximumZ={22}
+                            opacity={opacity}
+                            zIndex={-2}
+                        />
+                    ))}
 
                 {polygon && (
                     <Polygon
@@ -390,10 +439,14 @@ const Map = ({ opacity, lat, lon, setLocationInfo, locationInfo }: MapInterface)
                     />
                 )}
             </MapView>
-            <View className={'flex flex-row items-center  space-x-2 p-1 absolute bottom-12 right-9'}>
+            <View
+                className={'flex flex-row items-center  space-x-2 p-1 absolute bottom-12 right-9'}
+            >
                 {polygonArea && (
                     <View className="bg-white p-2 rounded-md border">
-                        <Text className="text-black text-sm font-medium">{polygonArea.toFixed(0)} m²</Text>
+                        <Text className="text-black text-sm font-medium">
+                            {polygonArea.toFixed(0)} m²
+                        </Text>
                     </View>
                 )}
                 <View className={'flex flex-row items-center bg-white rounded-md border  '}>
@@ -418,15 +471,26 @@ const Map = ({ opacity, lat, lon, setLocationInfo, locationInfo }: MapInterface)
                     </TouchableOpacity>
                 </View>
 
-                <TouchableOpacity className={'p-2 bg-white rounded-full  border'} onPress={centerToUserLocation}>
+                <TouchableOpacity
+                    className={'p-2 bg-white rounded-full  border'}
+                    onPress={centerToUserLocation}
+                >
                     <SimpleLineIcons name="cursor" size={20} color="black" />
                 </TouchableOpacity>
 
-                <TouchableOpacity className={'p-2 bg-white rounded-full  border'} onPress={handleAddLocation}>
+                <TouchableOpacity
+                    className={'p-2 bg-white rounded-full  border'}
+                    onPress={handleAddLocation}
+                >
                     <Feather name="plus" size={20} color="black" />
                 </TouchableOpacity>
             </View>
-            <BottomSheetAddLocation ref={sheetRef} dismiss={dismiss} lat={location.latitude} lon={location.longitude} />
+            <BottomSheetAddLocation
+                ref={sheetRef}
+                dismiss={dismiss}
+                lat={location.latitude}
+                lon={location.longitude}
+            />
         </>
     );
 };

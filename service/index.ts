@@ -4,6 +4,7 @@ import {
     Group,
     ListTagResponse,
     NumberInteractions,
+    Organization,
     PayloadNewLocation,
     Post,
     UserInfor,
@@ -161,23 +162,18 @@ export const fetchListInfo = async (idProvince: string) => {
     }
 };
 
-export const fetchAllProvince = async () => {
-    try {
-        const { data } = await instance.get('/api/provinces/view/');
-        return data;
-    } catch (error) {
-        console.error('Error fetching provinces: ', error);
-        return [];
-    }
+export const fetchAllProvince = async (): Promise<
+    { TenTinhThanhPho: string; TinhThanhPhoID: number }[]
+> => {
+    const { data } = await instance.get('/api/provinces/view/');
+    return data;
 };
 
-export const fetchDistrictsByProvinces = async (ProvinceID: string) => {
-    try {
-        const { data } = await instance.get(`/api/districts/Byprovince/${ProvinceID}`);
-        return data;
-    } catch (error) {
-        console.error('Error fetching districts', error);
-    }
+export const fetchDistrictsByProvinces = async (
+    provinceID: number,
+): Promise<{ DistrictID: number; DistrictName: string; ProvinceID: number }[]> => {
+    const { data } = await instance.get(`/api/districts/Byprovince/${provinceID}`);
+    return data;
 };
 
 export const fetchDistrictByName = async (name: string) => {
@@ -243,7 +239,10 @@ export const fetchAuctionInfor = async (LandAuctionID: string) => {
     return response.data;
 };
 
-export const fetchOrganization = async () => {
+export const fetchOrganization = async (): Promise<{
+    message: Organization[];
+    status: number;
+}> => {
     const response = await instance.get('/api/list_organizers');
     return response.data;
 };
@@ -466,34 +465,44 @@ export const GetPostByGroupId = async (
     return data;
 };
 
-export const CheckUserJoinGroup = async (idUser: number, idGroup: number) : Promise<{message: string, status: number}> => {
-    const {data} = await instance.get(`/api/group/check_user_join_group/${idUser}/${idGroup}`)
-    return data
-}
+export const CheckUserJoinGroup = async (
+    idUser: number,
+    idGroup: number,
+): Promise<{ message: string; status: number }> => {
+    const { data } = await instance.get(`/api/group/check_user_join_group/${idUser}/${idGroup}`);
+    return data;
+};
 
-export const JoinGroup =  async (idUser: number, idGroup: number) : Promise<{message: string, status: number}> => {
-    const {data} = await instance.post(`/api/group/join_group/${idUser}/${idGroup}`)
-    return data
-}
+export const JoinGroup = async (
+    idUser: number,
+    idGroup: number,
+): Promise<{ message: string; status: number }> => {
+    const { data } = await instance.post(`/api/group/join_group/${idUser}/${idGroup}`);
+    return data;
+};
 
-export const LeaveGroup =  async (idUser: number, idGroup: number) : Promise<{message: string, status: number}> => {
-    const {data} = await instance.delete(`/api/group/leave_group/${idUser}/${idGroup}`)
-    return data
-}
+export const LeaveGroup = async (
+    idUser: number,
+    idGroup: number,
+): Promise<{ message: string; status: number }> => {
+    const { data } = await instance.delete(`/api/group/leave_group/${idUser}/${idGroup}`);
+    return data;
+};
 
-export const SearchUserInvite = async (userName: string) : Promise<{
+export const SearchUserInvite = async (
+    userName: string,
+): Promise<{
     data: {
-        avatarLink: string,
-        idUser: number,
-        username: string
-    }[],
-    status: number
-}>  => {
-    const {data} = await instance.get('/api/group/search_user', {
-        data: {
-            text: userName
-        }
-    })
+        avatar: string;
+        idUser: number;
+        username: string;
+        fullName: string
+    }[];
+    status: number;
+}> => {
+    const { data } = await instance.post('/api/group/search_user', {
+        name: userName,
+    });
 
-    return data
-}
+    return data;
+};

@@ -226,3 +226,7 @@ export interface PayloadNewLocation {
     typeArea: string;
 }
 
+export interface Organization {
+    id: number;
+    name: string;
+}

@@ -5,6 +5,10 @@ import { SearchBar } from '@rneui/themed';
 import { Ionicons } from '@expo/vector-icons';
 import { useDebounce } from 'use-debounce';
 import { SearchUserInvite } from '@/service';
+import AvatarUser from '../ui/AvatarUser';
+import { TouchableOpacity } from 'react-native';
+import { Divider } from 'react-native-paper';
+import { router } from 'expo-router';
 
 export type Ref = BottomSheetModal;
 
@@ -20,12 +24,12 @@ const BottomSheetAddPeople = forwardRef<Ref, { dismiss: () => void }>((props, re
     const [search, setSearch] = useState<string>('');
     const [searchResult, setSearchResult] = useState<
         {
-            avatarLink: string;
+            avatar: string;
             idUser: number;
             username: string;
         }[]
     >([]);
-    const [isLoading, setIsLoading] = useState<boolean>(false)
+    const [isLoading, setIsLoading] = useState<boolean>(false);
 
     const [debouncedSearch] = useDebounce(search, 500);
 
@@ -36,7 +40,7 @@ const BottomSheetAddPeople = forwardRef<Ref, { dismiss: () => void }>((props, re
     useEffect(() => {
         const getUserInvite = async () => {
             try {
-                setIsLoading(true)
+                setIsLoading(true);
                 if (!debouncedSearch) {
                     setSearchResult([]);
                     return;
@@ -44,15 +48,34 @@ const BottomSheetAddPeople = forwardRef<Ref, { dismiss: () => void }>((props, re
                 const data = await SearchUserInvite(debouncedSearch);
                 data && data.data && data.data.length > 0 && setSearchResult(data.data);
             } catch (error) {
-                setSearchResult([])
-                console.error(error)
+                setSearchResult([]);
+                console.error(error);
             } finally {
-                setIsLoading(false)
+                setIsLoading(false);
             }
         };
 
-        getUserInvite()
+        getUserInvite();
     }, [debouncedSearch]);
+
+    const renderUser = (item: { avatar: string; idUser: number; username: string }) => {
+        return (
+            <View className="flex flex-row items-center justify-between">
+                <TouchableOpacity onPress={() => {router.navigate(`/listing/profileUser/${item.idUser}`); props.dismiss()}} className="flex flex-row flex-1 items-center">
+                    <AvatarUser avatarLink={item.avatar} fullName={item.username} />
+                    <Text className='ml-2 font-normal text-base'>{item.username}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity className="">
+                    <Text className='text-base font-bold text-blue-500'>Mời</Text>
+                </TouchableOpacity>
+            </View>
+        );
+    };
+
+    const handleResetSearch = () => {
+        setSearch('');
+        setSearchResult([]);
+    };
 
     return (
         <BottomSheetModal
@@ -62,35 +85,39 @@ const BottomSheetAddPeople = forwardRef<Ref, { dismiss: () => void }>((props, re
             index={1}
             onDismiss={props.dismiss}
         >
+            <SearchBar
+                placeholder="Tìm kiếm..."
+                onChangeText={updateSearch}
+                value={search}
+                containerStyle={{
+                    backgroundColor: 'transparent',
+                    borderBottomColor: 'transparent',
+                    borderTopColor: 'transparent',
+                }}
+                inputContainerStyle={{
+                    backgroundColor: '#f0f0f0',
+                }}
+                inputStyle={{
+                    color: '#333',
+                }}
+                searchIcon={<Ionicons name="search-outline" size={20} />}
+                platform={Platform.OS === 'ios' ? 'ios' : 'android'}
+                clearIcon={<Ionicons name="close-circle-outline" size={24} color={'#333'} />}
+                showLoading={isLoading}
+                showCancel={false}
+                onClear={() => handleResetSearch()}
+                onCancel={() => handleResetSearch()}
+            />
+
             <FlatList
                 data={searchResult}
-                renderItem={({ item }) => <Text>{item.username}</Text>}
+                renderItem={({ item }) => renderUser(item)}
                 contentContainerStyle={{ padding: 12 }}
-                ListHeaderComponent={() => (
-                    <SearchBar 
-                        placeholder="Tìm kiếm..."
-                        // onChangeText={updateSearch}
-                        // value={search}
-                        containerStyle={{
-                            backgroundColor: 'transparent',
-                            borderBottomColor: 'transparent',
-                            borderTopColor: 'transparent',
-                        }}
-                        inputContainerStyle={{
-                            backgroundColor: '#f0f0f0',
-                        }}
-                        inputStyle={{
-                            color: '#333',
-                        }}
-                        searchIcon={<Ionicons name="search-outline" size={20} />}
-                        platform={Platform.OS === 'ios' ? 'ios' : 'android'}
-                        clearIcon={<Ionicons name="close-circle" size={24} color={'#333'} />}
-                        showLoading={isLoading}
-                    />
-                )}
                 ListEmptyComponent={() => (
                     <Text className="text-center mt-2">Tìm kiếm người muốn thêm vào group</Text>
                 )}
+                ItemSeparatorComponent={() => <Divider horizontalInset={true}  style={{marginVertical: 12}} />}
+                keyboardDismissMode="on-drag"
             />
         </BottomSheetModal>
     );

@@ -1,5 +1,14 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, FlatList } from 'react-native';
+import {
+    View,
+    Text,
+    Image,
+    TouchableOpacity,
+    StyleSheet,
+    ActivityIndicator,
+    Alert,
+    FlatList,
+} from 'react-native';
 import { styled } from 'nativewind';
 import PostProfileSection from './PostProfileSection';
 import useAuthStore from '@/store/authStore';
@@ -10,13 +19,13 @@ import Colors from '@/constants/Colors';
 import CustomButton from '../ui/Button';
 import { usePaginatedList } from '@/hooks/usePaginatedList';
 
-const PostsPersonal = ({userIdParams} : {userIdParams?: number}) => {
+const PostsPersonal = ({ userIdParams }: { userIdParams?: number }) => {
     const { userId: userIdFromStore } = useAuthStore.getState();
 
     const userId = userIdParams || userIdFromStore;
 
     const { dataList, isLoading, totalPage, page, flatListRef, handlePageChange, getVisiblePages } =
-    usePaginatedList<Post>(() => GetUserPosted(userId, page), 1);
+        usePaginatedList<Post>(() => GetUserPosted(userId, page), 1);
 
     return (
         <>
@@ -32,8 +41,9 @@ const PostsPersonal = ({userIdParams} : {userIdParams?: number}) => {
                         numColumns={1}
                         scrollEnabled={false}
                         contentContainerStyle={{ padding: 12 }}
+                        ListEmptyComponent={() => <Text className='text-white text-center font-normal'>Người dùng chưa có bài viết nào</Text>}
                     />
-                    <View className="flex flex-row justify-center items-center space-x-2 my-2">
+                    {dataList.length > 0 && <View className="flex flex-row justify-center items-center space-x-2 my-2">
                         <CustomButton
                             disabled={page <= 1}
                             onPress={() => handlePageChange(page - 1)}
@@ -47,7 +57,9 @@ const PostsPersonal = ({userIdParams} : {userIdParams?: number}) => {
                                 title={pageNum.toString()}
                                 key={pageNum}
                                 onPress={() => handlePageChange(pageNum)}
-                                className={`bg-[${pageNum === page ? Colors.primary.green : '#d9d9d9'}]`}
+                                className={`bg-[${
+                                    pageNum === page ? Colors.primary.green : '#d9d9d9'
+                                }]`}
                             />
                         ))}
 
@@ -58,7 +70,7 @@ const PostsPersonal = ({userIdParams} : {userIdParams?: number}) => {
                             className={`${page === totalPage && 'bg-[#d9d9d9]'}`}
                             textClassName={`${page === totalPage && 'text-black'}`}
                         />
-                    </View>
+                    </View>}
                 </>
             )}
         </>

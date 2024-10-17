@@ -10,6 +10,7 @@ import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import Colors from '@/constants/Colors';
 
 import { MenuProvider } from 'react-native-popup-menu';
+import { PaperProvider } from 'react-native-paper';
 
 export {
     // Catch any errors thrown by the Layout component.
@@ -51,34 +52,64 @@ export default function RootLayout() {
 function RootLayoutNav() {
     return (
         <GestureHandlerRootView style={{ flex: 1 }}>
-            <BottomSheetModalProvider>
-               <MenuProvider>
-                    <SafeAreaProvider>
-                        <Stack
-                            screenOptions={{
-                                contentStyle: { backgroundColor: Colors.primary.background },
-                            }}
-                        >
-                            <Stack.Screen
-                                name="(tabs)"
-                                options={{ headerShown: false, headerBlurEffect: 'regular', headerTransparent: true }}
-                            />
-                            <Stack.Screen name="(modals)/auth" options={{ headerShown: false, presentation: 'card' }} />
-                            <Stack.Screen name="(modals)/search" options={{ presentation: 'card', headerShown: false }} />
-                            <Stack.Screen name="(modals)/setting" options={{ presentation: 'card', headerShown: false }} />
-                            <Stack.Screen name="(modals)/newPost" options={{ presentation: 'card', headerShown: false }} />
-                            <Stack.Screen name="(modals)/preview" options={{ presentation: 'card', headerShown: false }} />
-                            <Stack.Screen
-                                name="(modals)/groupSetting"
-                                options={{ presentation: 'card', headerShown: false }}
-                            />
-                            <Stack.Screen name="listing/post/[id]" options={{ headerShown: false }} />
-                            <Stack.Screen name="listing/group/[id]" options={{ headerShown: false }} />
-                            <Stack.Screen name="listing/profileUser/[id]" options={{ headerShown: false }} />
-                        </Stack>
-                    </SafeAreaProvider>
-               </MenuProvider>
-            </BottomSheetModalProvider>
+            <PaperProvider>
+                <BottomSheetModalProvider>
+                    <MenuProvider>
+                        <SafeAreaProvider>
+                            <Stack
+                                screenOptions={{
+                                    contentStyle: { backgroundColor: Colors.primary.background },
+                                }}
+                            >
+                                <Stack.Screen
+                                    name="(tabs)"
+                                    options={{
+                                        headerShown: false,
+                                        headerBlurEffect: 'regular',
+                                        headerTransparent: true,
+                                    }}
+                                />
+                                <Stack.Screen
+                                    name="(modals)/auth"
+                                    options={{ headerShown: false, presentation: 'card' }}
+                                />
+                                <Stack.Screen
+                                    name="(modals)/search"
+                                    options={{ presentation: 'card', headerShown: false }}
+                                />
+                                <Stack.Screen
+                                    name="(modals)/setting"
+                                    options={{ presentation: 'card', headerShown: false }}
+                                />
+                                <Stack.Screen
+                                    name="(modals)/newPost"
+                                    options={{ presentation: 'card', headerShown: false }}
+                                />
+                                <Stack.Screen
+                                    name="(modals)/preview"
+                                    options={{ presentation: 'card', headerShown: false }}
+                                />
+                                <Stack.Screen
+                                    name="(modals)/groupSetting"
+                                    options={{ presentation: 'card', headerShown: false }}
+                                />
+                                <Stack.Screen
+                                    name="listing/post/[id]"
+                                    options={{ headerShown: false }}
+                                />
+                                <Stack.Screen
+                                    name="listing/group/[id]"
+                                    options={{ headerShown: false }}
+                                />
+                                <Stack.Screen
+                                    name="listing/profileUser/[id]"
+                                    options={{ headerShown: false }}
+                                />
+                            </Stack>
+                        </SafeAreaProvider>
+                    </MenuProvider>
+                </BottomSheetModalProvider>
+            </PaperProvider>
         </GestureHandlerRootView>
     );
 }

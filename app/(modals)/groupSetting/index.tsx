@@ -1,4 +1,4 @@
-import { View, SafeAreaView, FlatList, Text, RefreshControl } from 'react-native';
+import { View, SafeAreaView, FlatList, Text, RefreshControl, ActivityIndicator } from 'react-native';
 import React, { useCallback, useEffect, useState } from 'react';
 import { BoxInterface } from '@/constants/interface';
 import { ViewlistBox, ViewlistGroup } from '@/service'; // Assuming ViewlistGroup is in the same service file
@@ -21,15 +21,18 @@ const Page = () => {
     const [expandedBoxes, setExpandedBoxes] = useState<number[]>([]); 
     const [groupData, setGroupData] = useState<{ [key: number]: GroupInterface[] }>({});
     const [refreshing, setRefreshing] = useState(false);
-
+const [isLoading, setIsLoading] = useState<boolean>(false)
     const getListBox = async () => {
         try {
+            setIsLoading(true)
             const data = await ViewlistBox();
             if (data) {
                 setListBox(data);
             }
         } catch (error) {
             console.error(error);
+        } finally {
+            setIsLoading(false)
         }
     };
 
@@ -123,7 +126,11 @@ const Page = () => {
 
     return (
         <SafeAreaView style={{ flex: 1 }}>
-            <FlatList
+           {
+            isLoading ? (
+                <ActivityIndicator size={30} />
+            ) : (
+                <FlatList
                 data={listBox}
                 renderItem={({ item }) => renderListBox(item)}
                 keyExtractor={(item) => item.BoxID.toString()}  
@@ -131,6 +138,8 @@ const Page = () => {
                 ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
                 refreshControl={<RefreshControl tintColor={Colors.primary.green} colors={[Colors.primary.green]} refreshing={refreshing} onRefresh={onRefresh} />}
             />
+            )
+           }
         </SafeAreaView>
     );
 };

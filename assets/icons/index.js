@@ -120,9 +120,20 @@ export const CheckpointsIcon = (props) => (
             strokeWidth={0.5}
             d="M20.75 23.5c0 .537-.253 1.07-.753 1.576-.501.508-1.24.977-2.17 1.376-1.863.798-4.453 1.298-7.327 1.298-2.874 0-5.464-.5-7.326-1.298-.932-.399-1.67-.868-2.17-1.376C.502 24.569.25 24.036.25 23.5c0-.537.253-1.07.753-1.576.501-.508 1.24-.977 2.17-1.376 1.863-.798 4.453-1.298 7.327-1.298 2.874 0 5.464.5 7.326 1.298.932.399 1.67.868 2.17 1.376.501.507.754 1.04.754 1.576Z"
         />
-        <Path stroke="#000" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M10.6 1 10 23" />
+        <Path
+            stroke="#000"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={1.8}
+            d="M10.6 1 10 23"
+        />
         <Path fill="#FF4401" d="M10.6 1 25 7.75 10.6 14.5" />
-        <Path stroke="#000" strokeLinecap="round" strokeLinejoin="round" d="M10.6 1 25 7.75 10.6 14.5" />
+        <Path
+            stroke="#000"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M10.6 1 25 7.75 10.6 14.5"
+        />
     </Svg>
 );
 
@@ -173,5 +184,17 @@ export const Logo = (props) => (
                 height={512}
             />
         </Defs>
+    </Svg>
+);
+
+export const Hammer = (props) => (
+    <Svg xmlns="http://www.w3.org/2000/svg" width={32} height={32} fill="none" {...props}>
+        <Path
+            stroke="#B7A800"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M1 31h17.308M16 31v-5.962H3.308V31M17.815 1.698l-8.273 8.55a2.441 2.441 0 0 0 0 3.372l3.655 3.777a2.256 2.256 0 0 0 3.264 0l8.273-8.55a2.44 2.44 0 0 0 0-3.372l-3.655-3.777a2.255 2.255 0 0 0-3.264 0ZM20.615 13.115 31 23.845"
+        />
     </Svg>
 );

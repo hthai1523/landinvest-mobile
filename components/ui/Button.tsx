@@ -49,13 +49,16 @@ const CustomButton: React.FC<CustomButtonProps> = ({
 
     return (
         <TouchableOpacity
-            style={[{ backgroundColor, borderColor, borderWidth: type === 'secondary' ? 1 : 0 }, style]}
+            style={[
+                { backgroundColor, borderColor, borderWidth: type === 'secondary' ? 1 : 0 },
+                style,
+            ]}
             className={`px-3 py-2 rounded ${className}`}
             disabled={isLoading}
             {...props}
         >
             {isLoading ? (
-                <ActivityIndicator color={type === 'primary' ? "#fff" : ''} size={30} />
+                <ActivityIndicator color={type === 'primary' ? '#fff' : ''} size={30} />
             ) : (
                 <Text
                     style={[textStyle, { color }]}

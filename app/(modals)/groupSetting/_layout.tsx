@@ -15,7 +15,7 @@ const LayoutSetting = () => {
                 name="index"
                 options={{
                     presentation: 'card',
-                    headerTitle: 'Cài đặt Box Group',
+                    headerTitle: 'Các Box Group',
                     headerLargeTitle: true,
                     headerStyle: { backgroundColor: Colors.primary.header },
                     headerTintColor: '#d9d9d9',
