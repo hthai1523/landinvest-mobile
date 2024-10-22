@@ -116,7 +116,7 @@ const Page = () => {
 
 
             <BottomSheet dismiss={dismiss} ref={sheetRef} />
-            <BottomSheetQuyHoach dismiss={handleBottomSheetQuyHoachDismiss} ref={sheetQuyHoachRef} />
+            {/* <BottomSheetQuyHoach dismiss={handleBottomSheetQuyHoachDismiss} ref={sheetQuyHoachRef} /> */}
         </View>
     );
 };

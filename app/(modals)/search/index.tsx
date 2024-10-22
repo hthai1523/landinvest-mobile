@@ -89,7 +89,7 @@ const Search = () => {
                 delayLongPress={500}
             >
                 <Feather name="map-pin" size={20} color="#fff" />
-                <Text className="text-white">{item.display_name}</Text>
+                <Text className="text-white ml-2">{item.display_name}</Text>
             </TouchableOpacity>
         ),
         [handleResultPress],
@@ -97,13 +97,9 @@ const Search = () => {
 
     return (
         <SafeAreaView style={{ flex: 1, position: 'relative', backgroundColor: Colors.primary.background }}>
-            <Stack.Screen
-                options={{
-                    headerBackTitle: 'Quay lại',
-                }}
-            />
+            
             <View>
-                {isLoading ? (
+                {true ? (
                     <LinearProgress
                         color={Colors.primary.green}
                         style={{ position: 'absolute', top: 0 }}
@@ -121,6 +117,7 @@ const Search = () => {
                                 <Text style={{ textAlign: 'center', color: '#fff' }}>No results found</Text>
                             ) : null
                         }
+                        
                     />
                 )}
             </View>

@@ -27,6 +27,7 @@ import { BottomSheetModal, useBottomSheetModal } from '@gorhom/bottom-sheet';
 import BottomSheetAddLocation from '../ui/BottomSheetAddLocation';
 import useAuthStore from '@/store/authStore';
 import { router, useLocalSearchParams } from 'expo-router';
+import BottomSheetCallout from '../ui/BottomSheetCallout';
 
 interface MapInterface {
     opacity: number;
@@ -41,6 +42,7 @@ const Map = ({ opacity, lat, lon, setLocationInfo, locationInfo }: MapInterface)
 
     const { dismiss } = useBottomSheetModal();
     const sheetRef = useRef<BottomSheetModal>(null);
+    const sheetCalloutRef = useRef<BottomSheetModal>(null);
 
     const [districtName, setDistrictName] = useState<string>('');
     const [idDistrictForMarker, setIdDistrictForMarker] = useState<number | null>();
@@ -67,6 +69,7 @@ const Map = ({ opacity, lat, lon, setLocationInfo, locationInfo }: MapInterface)
         getAllFilter: state.getAllFilters,
     }));
     let filters = getAllFilter();
+    
 
     const { quyhoach, vitri } = useLocalSearchParams<{
         quyhoach?: string;
@@ -366,20 +369,22 @@ const Map = ({ opacity, lat, lon, setLocationInfo, locationInfo }: MapInterface)
                 {filteredMarkers &&
                     filteredMarkers.length > 0 &&
                     filteredMarkers.map((marker) => (
-                        <Marker
-                            key={marker.id}
-                            coordinate={{ latitude: marker.latitude, longitude: marker.longitude }}
-                            title="Marker Title 1"
-                            description="Marker Description"
-                        >
-                            <Image
-                                source={require('@/assets/images/markerLocation.png')}
-                                style={{ width: 40, height: 40, resizeMode: 'contain' }}
-                            />
-                            <Callout>
-                                <CustomCalloutView marker={marker} />
-                            </Callout>
-                        </Marker>
+                        <React.Fragment key={marker.id}>
+                            <Marker
+                                coordinate={{ latitude: marker.latitude, longitude: marker.longitude }}
+                                title="Marker Title 1"
+                                description="Marker Description"
+                            >
+                                <Image
+                                    source={require('@/assets/images/markerLocation.png')}
+                                    style={{ width: 40, height: 40, resizeMode: 'contain' }}
+                                />
+                                <Callout onPress={() => sheetCalloutRef.current?.present()}>
+                                    <CustomCalloutView marker={marker} />
+                                </Callout>
+                            </Marker>
+                            <BottomSheetCallout ref={sheetCalloutRef} dismiss={dismiss} marker={marker} />
+                        </React.Fragment>
                     ))}
 
                 {selectedCoordinates &&
@@ -396,7 +401,6 @@ const Map = ({ opacity, lat, lon, setLocationInfo, locationInfo }: MapInterface)
                         urlTemplate={`https://apilandinvest.gachmen.org/get_api_quyhoach/${selectedIDQuyHoach}/{z}/{x}/{y}`}
                         maximumZ={22}
                         opacity={opacity}
-                        zIndex={-2}
                     />
                 )}
 
@@ -408,7 +412,6 @@ const Map = ({ opacity, lat, lon, setLocationInfo, locationInfo }: MapInterface)
                             urlTemplate={`https://apilandinvest.gachmen.org/get_api_quyhoach/${item}/{z}/{x}/{y}`}
                             maximumZ={22}
                             opacity={opacity}
-                            zIndex={-2}
                         />
                     ))}
 

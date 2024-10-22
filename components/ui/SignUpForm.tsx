@@ -1,5 +1,13 @@
-import React from 'react';
-import { View, Text, SafeAreaView, TextInput, KeyboardAvoidingView, Platform, Alert, ScrollView } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+    View,
+    Text,
+    SafeAreaView,
+    KeyboardAvoidingView,
+    Platform,
+    Alert,
+    ScrollView,
+} from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { useForm, Controller } from 'react-hook-form';
@@ -7,6 +15,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@rneui/themed';
 import Colors from '@/constants/Colors';
 import { signUpFormSchema, SignUpFormSchema } from '@/constants/FormSchema';
+import TextInput from 'react-native-text-input-interactive';
+import { useNetInfo } from '@react-native-community/netinfo';
+import { callRegister } from '@/service';
+import * as Location from 'expo-location';
 
 const SignUpForm = ({ onChangeForm }: { onChangeForm: () => void }) => {
     const {
@@ -18,12 +30,80 @@ const SignUpForm = ({ onChangeForm }: { onChangeForm: () => void }) => {
         mode: 'onBlur',
     });
 
-    const onSubmit = (data: SignUpFormSchema) => {
-        Alert.alert('Đăng ký', 'Đang xử lý yêu cầu đăng ký của bạn...');
-        // Xử lý đăng ký ở đây, ví dụ: registerUser(data);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [location, setLocation] = useState({ latitude: 105, longitude: 20 });
+
+    const requestLocationPermission = useCallback(async () => {
+        try {
+            const { status } = await Location.requestForegroundPermissionsAsync();
+            if (status !== 'granted') {
+                Alert.alert(
+                    'Quyền bị từ chối',
+                    'Cần có quyền truy cập vị trí để căn giữa bản đồ vào vị trí của bạn.',
+                );
+                return false;
+            }
+            return true;
+        } catch (error) {
+            console.error('Error requesting location permissions:', error);
+            return false;
+        }
+    }, []);
+
+    const centerToUserLocation = useCallback(async () => {
+        const hasPermission = await requestLocationPermission();
+        if (!hasPermission) return;
+
+        try {
+            const { coords } = await Location.getCurrentPositionAsync({
+                accuracy: Location.Accuracy.High,
+            });
+            setLocation({ latitude: coords.latitude, longitude: coords.longitude });
+        } catch (error) {
+            console.error('Error getting user location: ', error);
+            Alert.alert('Lỗi', 'Không xác định được vị trí hiện tại của bạn.');
+        }
+    }, [requestLocationPermission]);
+
+    useEffect(() => {
+        centerToUserLocation();
+    }, [centerToUserLocation]);
+    const onSubmit = async (data: SignUpFormSchema) => {
+        console.log(data);
+        try {
+            setIsLoading(true);
+            const state = useNetInfo();
+            if (state.isConnected && state.details) {
+                const ipAddress: string = state.details.ipAddress;
+                const res = await callRegister(
+                    data.userName,
+                    data.name,
+                    data.password,
+                    location.latitude,
+                    location.longitude,
+                    ipAddress,
+                    data.email,
+                );
+
+                if (res && res.message.include('Email or UserName is already taken')) {
+                    Alert.alert(
+                        'Email này đã được sử dụng trước đó',
+                        'Vui lòng sử dụng email khác',
+                    );
+                } else {
+                    Alert.alert('Đăng ký thành công', 'Kiểm tra email để hoàn tất đăng ký');
+                    onChangeForm();
+                }
+            }
+        } catch (error) {}
     };
 
-    const renderInput = (name: keyof SignUpFormSchema, placeholder: string, options: any = {}, delay: number) => (
+    const renderInput = (
+        name: keyof SignUpFormSchema,
+        placeholder: string,
+        options: any = {},
+        delay: number,
+    ) => (
         <Animated.View entering={FadeInDown.delay(delay).duration(1000).springify()}>
             <Controller
                 control={control}
@@ -32,21 +112,22 @@ const SignUpForm = ({ onChangeForm }: { onChangeForm: () => void }) => {
                     <View style={{ marginBottom: 10 }}>
                         <TextInput
                             placeholder={placeholder}
-                            placeholderTextColor="gray"
-                            style={{
-                                borderColor: errors[name] ? 'red' : 'gray',
+                            textInputStyle={{
+                                width: '100%',
+                                borderColor: errors[name] ? 'red' : Colors.primary.green,
                                 borderWidth: 1,
-                                padding: 10,
-                                backgroundColor: '#f5f5f5',
-                                color: '#000',
                                 borderRadius: 12,
                             }}
                             onBlur={onBlur}
                             onChangeText={onChange}
                             value={value as string}
+                            mainColor={Colors.primary.green}
+                            placeholderTextColor={Colors.primary.green}
                             {...options}
                         />
-                        {errors[name] && <Text style={{ color: 'red' }}>{errors[name]?.message}</Text>}
+                        {errors[name] && (
+                            <Text style={{ color: 'red' }}>{errors[name]?.message}</Text>
+                        )}
                     </View>
                 )}
             />
@@ -84,7 +165,10 @@ const SignUpForm = ({ onChangeForm }: { onChangeForm: () => void }) => {
                     source={require('@/assets/images/Layer1.png')}
                 />
             </View>
-            <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+            <KeyboardAvoidingView
+                style={{ flex: 1 }}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            >
                 <View className="p-4 justify-center flex-1">
                     <Animated.Text
                         entering={FadeInDown.duration(1000).springify()}
@@ -100,10 +184,21 @@ const SignUpForm = ({ onChangeForm }: { onChangeForm: () => void }) => {
                     </Animated.Text>
 
                     <Animated.View entering={FadeInDown.duration(1000).springify()}>
-                        {renderInput('name', 'Tên', { autoCapitalize: 'words' }, 200)}
-                        {renderInput('email', 'Email', { keyboardType: 'email-address', autoCapitalize: 'none' }, 400)}
+                        {renderInput('userName', 'Tên đăng nhập', {}, 200)}
+                        {renderInput('name', 'Họ và tên', { autoCapitalize: 'words' }, 200)}
+                        {renderInput(
+                            'email',
+                            'Email',
+                            { keyboardType: 'email-address', autoCapitalize: 'none' },
+                            400,
+                        )}
                         {renderInput('password', 'Mật khẩu', { secureTextEntry: true }, 600)}
-                        {renderInput('passwordConfirmation', 'Xác nhận mật khẩu', { secureTextEntry: true }, 800)}
+                        {renderInput(
+                            'passwordConfirmation',
+                            'Xác nhận mật khẩu',
+                            { secureTextEntry: true },
+                            800,
+                        )}
                     </Animated.View>
 
                     <Animated.View entering={FadeInDown.delay(1000).duration(1000).springify()}>

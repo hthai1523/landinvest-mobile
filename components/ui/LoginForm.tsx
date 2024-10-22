@@ -61,7 +61,7 @@ const LoginForm = ({ onChangeForm }: { onChangeForm: () => void }) => {
                     useAuthStore.getState().login(userData, access_token, refreshtoken, UserID);
                     console.log(res.data);
                     Alert.alert('Thành công', 'Đăng nhập thành công!');
-                    router.replace('/(tabs)/');
+                    router.back()
                 }
             } else {
                 Alert.alert('Không có kết nối Internet');
@@ -136,7 +136,7 @@ const LoginForm = ({ onChangeForm }: { onChangeForm: () => void }) => {
                                     autoCapitalize="none"
                                     textInputStyle={{
                                         width: '100%',
-                                        borderColor: errors.userName && 'red',
+                                        borderColor: errors.userName ? 'red' : Colors.primary.green,
                                         borderWidth: 1,
                                         borderRadius: 12,
                                     }}
@@ -163,7 +163,7 @@ const LoginForm = ({ onChangeForm }: { onChangeForm: () => void }) => {
                                     secureTextEntry
                                     textInputStyle={{
                                         width: '100%',
-                                        borderColor: errors.password && 'red',
+                                        borderColor: errors.password ? 'red' : Colors.primary.green,
                                         borderWidth: 1,
                                         borderRadius: 12,
                                     }}

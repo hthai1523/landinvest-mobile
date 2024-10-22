@@ -21,7 +21,7 @@ export function Header() {
     }, [segments]);
 
     const RenderRightButtons = () => {
-        if (!isLoggedIn) {
+        if (!isLoggedIn && !isGroupRoute) {
             return (
                 <TouchableOpacity
                     className={`bg-[${Colors.primary.green}] px-3 py-2 rounded mr-3`}

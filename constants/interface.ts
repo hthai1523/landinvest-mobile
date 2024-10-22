@@ -216,7 +216,7 @@ export interface BoxInterface {
 
 export interface PayloadNewLocation {
     idUser: string | number;
-    imageLink: string;
+    imageLink: string[];
     description: string | undefined;
     longitude: number;
     latitude: number;

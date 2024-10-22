@@ -15,7 +15,7 @@ const CustomCalloutView = ({ marker }: { marker: ListMarker }) => {
     }, []);
     return (
         <>
-            <View className="w-40 h-fit p-2 space-y-2">
+            <View className="w-40 h-fit p-2 space-y-2 rounded-lg overflow-hidden">
                 <Text className="text-base font-bold">{marker?.description || 'No description'}</Text>
                 <Text className="">Giá/m²: {formatToVND(marker?.priceOnM2) || 'No description'}</Text>
                 <CustomButton onPress={openBottomSheet} title="Xem chi tiết" />

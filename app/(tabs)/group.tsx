@@ -80,7 +80,7 @@ const Group = () => {
     };
 
     const handleToNewPost = () => {
-        if (isAuthenticated) {
+        if (isAuthenticated === true) {
             router.push('/(modals)/newPost/');
         } else {
             Alert.alert('Bạn phải đăng nhập để đăng bài');

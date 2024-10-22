@@ -32,14 +32,12 @@ export const callLogout = () => {
 };
 
 // API register
-export const callRegister = (
+export const callRegister = async (
     Username: string,
     Fullname: string,
     Password: string,
-    Gender: string,
     Latitude: number,
     Longitude: number,
-    AvatarLink: string,
     ipAddress: string,
     Email: string,
 ) => {
@@ -47,25 +45,14 @@ export const callRegister = (
         Username,
         FullName: Fullname,
         Password,
-        Gender,
         Latitude,
         Longitude,
-        avatarLink: AvatarLink,
         Email,
         LastLoginIP: ipAddress,
     };
 
-    console.log('Payload:', payload);
-
-    return instance
-        .post('/api/register', payload)
-        .then((response) => response.data)
-        .catch((error) => {
-            if (error.response) {
-                console.error('Error Response Data:', error.response.data);
-            }
-            throw error;
-        });
+    const { data } = await instance.post('/api/register', payload);
+    return data;
 };
 
 // API token
@@ -105,6 +92,11 @@ export const GetUserPosted = async (
     page: number,
 ): Promise<{ data: Post[]; status: number; numberItem: number; numberPage: number }> => {
     const { data } = await instance.get(`/api/forum/list_all_post_by_user/${id}/${page}`);
+    return data;
+};
+
+export const GetUserViewed = async (idUser: number): Promise<{ data: Post[]; status: number }> => {
+    const { data } = await instance.get(`/api/forum/list_history_view_post/${idUser}`);
     return data;
 };
 
@@ -496,7 +488,7 @@ export const SearchUserInvite = async (
         avatar: string;
         idUser: number;
         username: string;
-        fullName: string
+        fullName: string;
     }[];
     status: number;
 }> => {

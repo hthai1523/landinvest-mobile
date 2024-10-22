@@ -104,9 +104,10 @@ const BottomSheetAddLocation = forwardRef<Ref, BottomSheetAddLocationProps>(({ d
                         const base64 = await FileSystem.readAsStringAsync(asset.uri, {
                             encoding: FileSystem.EncodingType.Base64,
                         });
-                        return `data:image/jpeg;base64,${base64}`;
+                        return base64;
                     }),
                 );
+                console.log(base64Images)
                 setImages((prevImages) => [...prevImages, ...base64Images]);
                 setValue('images', [...images, ...base64Images]);
             }
@@ -126,8 +127,8 @@ const BottomSheetAddLocation = forwardRef<Ref, BottomSheetAddLocationProps>(({ d
     }, []);
 
     const renderImages = (item: string, index: number) => {
-        const isBase64 = item.startsWith('data:image');
-        const imageSource = isBase64 ? { uri: item } : { uri: item };
+        const isBase64 = item.length > 100
+        const imageSource = isBase64 ? { uri: `data:image/jpeg;base64,${item}` } : { uri: item };
 
         return (
             <AnimatedTouchableOpacity
@@ -171,7 +172,7 @@ const BottomSheetAddLocation = forwardRef<Ref, BottomSheetAddLocationProps>(({ d
         }
         const payload: PayloadNewLocation = {
             idUser: userId,
-            imageLink: JSON.stringify(images),
+            imageLink: images,
             description: data.description,
             longitude: lon,
             latitude: lat,

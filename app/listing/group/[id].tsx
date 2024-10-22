@@ -134,13 +134,21 @@ const Page = () => {
 
     const joinGroup = async () => {
         try {
-            if (!isJoinGroup && userId) {
+            if (isJoinGroup === false && userId && isAuthenticated) {
                 setIsLoadingJoinGroup(true);
                 const data = await JoinGroup(+userId, +id);
                 data.message.includes('Join group successful') && setIsJoinGroup(true);
-            } else {
-                sheetRef.current?.present();
             }
+
+            if(isJoinGroup === false && isAuthenticated === false ) {
+                Alert.alert('Phải đăng nhập để vào group', "", [
+                    {
+                        text: "Ok",
+                        onPress: () => router.navigate('/(modals)/auth/')
+                    }
+                ]);
+            }
+            sheetRef.current?.present()
         } catch (error) {
             Alert.alert('Tham gia group thất bại');
         } finally {
@@ -167,6 +175,7 @@ const Page = () => {
     return (
         <View style={{ flex: 1 }}>
             <StatusBar style="dark" />
+            {/* header */}
             <AnimatedSafeView
                 style={[
                     headerAnimatedStyle,
@@ -188,6 +197,7 @@ const Page = () => {
                     </Animated.Text>
                 </View>
             </AnimatedSafeView>
+
             <Animated.FlatList
                 data={dataList}
                 ref={scrollRef}

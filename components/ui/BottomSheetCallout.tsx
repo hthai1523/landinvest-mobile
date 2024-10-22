@@ -1,4 +1,13 @@
-import { View, Text, ScrollView, Dimensions, FlatList, Image, ActivityIndicator, TouchableOpacity } from 'react-native';
+import {
+    View,
+    Text,
+    ScrollView,
+    Dimensions,
+    FlatList,
+    Image,
+    ActivityIndicator,
+    TouchableOpacity,
+} from 'react-native';
 import React, { forwardRef, useMemo, useCallback, useState } from 'react';
 import { BottomSheetBackdrop, BottomSheetModal } from '@gorhom/bottom-sheet';
 import { ListMarker } from '@/constants/interface';
@@ -21,10 +30,11 @@ const { width, height } = Dimensions.get('screen');
 const BottomSheetCallout = forwardRef<Ref, BottomSheetCalloutProps>(({ dismiss, marker }, ref) => {
     const snapPoints = useMemo(() => ['50%', '80%'], []);
     const renderBackdrop = useCallback(
-        (props: any) => <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={1} />,
+        (props: any) => (
+            <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={1} />
+        ),
         [],
     );
-
 
     return (
         <>
@@ -35,10 +45,12 @@ const BottomSheetCallout = forwardRef<Ref, BottomSheetCalloutProps>(({ dismiss, 
                 index={1}
                 onDismiss={dismiss}
             >
-                <ScrollView className="space-y-2">
+                <ScrollView className="space-y-2" scrollEnabled={true}>
                     <View className="px-4 space-y-2">
                         <View className="flex flex-row items-center justify-between">
-                            <Text className="text-lg font-bold">{marker.description || 'No description'}</Text>
+                            <Text className="text-lg font-bold">
+                                {marker.description || 'No description'}
+                            </Text>
                             <Avatar
                                 size={32}
                                 rounded

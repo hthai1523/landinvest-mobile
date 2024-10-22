@@ -12,7 +12,13 @@ import {
     ActivityIndicator,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { FetchPostById, IsUserLikePost, LikePost, ListUserLike, numberInteractions } from '@/service';
+import {
+    FetchPostById,
+    IsUserLikePost,
+    LikePost,
+    ListUserLike,
+    numberInteractions,
+} from '@/service';
 import { Comment, NumberInteractions, Post, UserLikePost } from '@/constants/interface';
 import CustomImage from '@/components/ui/Image';
 import { AntDesign, Feather, FontAwesome, Ionicons } from '@expo/vector-icons';
@@ -68,7 +74,7 @@ const Page = () => {
     const commentInputRef = useRef<TextInput>(null);
     const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
 
-    console.log(id)
+    console.log(id);
 
     // Adjust these values based on your design preferences
     const HEADER_HEIGHT_EXPANDED = 85 + insets.top;
@@ -99,7 +105,12 @@ const Page = () => {
     );
 
     const height = useDerivedValue(() =>
-        interpolate(progress.value, [0, 1], [HEADER_HEIGHT_EXPANDED, HEADER_HEIGHT_COLLAPSED], Extrapolation.CLAMP),
+        interpolate(
+            progress.value,
+            [0, 1],
+            [HEADER_HEIGHT_EXPANDED, HEADER_HEIGHT_COLLAPSED],
+            Extrapolation.CLAMP,
+        ),
     );
 
     const paddingTop = useDerivedValue(() =>
@@ -114,11 +125,15 @@ const Page = () => {
     }));
 
     const animatedLeftStyle = useAnimatedStyle(() => ({
-        opacity: withTiming(interpolate(scrollY.value, [0, SCROLL_THRESHOLD - 10], [1, 0], Extrapolation.CLAMP)),
+        opacity: withTiming(
+            interpolate(scrollY.value, [0, SCROLL_THRESHOLD - 10], [1, 0], Extrapolation.CLAMP),
+        ),
     }));
 
     const animatedTitleStyle = useAnimatedStyle(() => ({
-        opacity: withTiming(interpolate(scrollY.value, [0, SCROLL_THRESHOLD], [0, 1], Extrapolation.CLAMP)),
+        opacity: withTiming(
+            interpolate(scrollY.value, [0, SCROLL_THRESHOLD], [0, 1], Extrapolation.CLAMP),
+        ),
     }));
 
     useEffect(() => {
@@ -202,7 +217,10 @@ const Page = () => {
                     <AntDesign name={isLiked ? 'like1' : 'like2'} size={24} color="white" />
                     <Text className="ml-2 text-white">Like</Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={toggleCommentInput} className="flex flex-row items-center">
+                <TouchableOpacity
+                    onPress={toggleCommentInput}
+                    className="flex flex-row items-center"
+                >
                     <Ionicons name="chatbubble-outline" size={24} color="white" />
                     <Text className="ml-2 text-white">Comment</Text>
                 </TouchableOpacity>
@@ -231,7 +249,12 @@ const Page = () => {
                     exiting={FadeOut.duration(200)}
                 />
             )}
-            <StatusBar animated hidden={statusBarHidden} style="light" hideTransitionAnimation="fade" />
+            <StatusBar
+                animated
+                hidden={statusBarHidden}
+                style="light"
+                hideTransitionAnimation="fade"
+            />
 
             {/* header */}
             <AnimatedSafeView
@@ -241,26 +264,50 @@ const Page = () => {
                         top: 0,
                         left: 0,
                         right: 0,
-                        zIndex: 1,
+                        zIndex: 9999,
                         backgroundColor: Colors.primary.header,
                     },
                     animatedHeaderStyle,
                 ]}
             >
-                <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, paddingHorizontal: 12 }}>
+                <View
+                    style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        flex: 1,
+                        paddingHorizontal: 12,
+                    }}
+                >
                     <TouchableOpacity onPress={() => router.back()} style={{ zIndex: 1 }}>
                         <Ionicons name="chevron-back" size={20} color={'#fff'} />
                     </TouchableOpacity>
                     <AnimatedTouchableOpacity
-                        onPress={() => router.navigate(`/listing/profileUser/${postDetail?.UserID}`)}
-                        style={[animatedLeftStyle, { flexDirection: 'row', alignItems: 'center', marginLeft: 8 }]}
+                        onPress={() =>
+                            router.navigate(`/listing/profileUser/${postDetail?.UserID}`)
+                        }
+                        style={[
+                            animatedLeftStyle,
+                            {
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                marginLeft: 8,
+                                zIndex: 999999,
+                            },
+                        ]}
                     >
                         {/* <CustomImage
                             source={require('@/assets/images/avatar.png')}
                             style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: '#F9DFC0' }}
                         /> */}
                         <AvatarUser avatarLink={postDetail?.avatarLink} />
-                        <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 18, marginLeft: 8 }}>
+                        <Text
+                            style={{
+                                color: '#fff',
+                                fontWeight: 'bold',
+                                fontSize: 18,
+                                marginLeft: 8,
+                            }}
+                        >
                             {postDetail?.FullName || 'Ẩn danh'}
                         </Text>
                     </AnimatedTouchableOpacity>
@@ -298,11 +345,15 @@ const Page = () => {
                 ) : (
                     <>
                         <View style={{ paddingHorizontal: 12, marginBottom: 16 }}>
-                            <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 28 }}>{postDetail?.Title}</Text>
+                            <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 28 }}>
+                                {postDetail?.Title}
+                            </Text>
                             <Text style={{ color: '#fff', fontSize: 14, marginTop: 8 }}>
                                 {calcDate(postDetail?.PostTime) || ''}
                             </Text>
-                            <Text style={{ color: '#fff', fontSize: 16, marginTop: 16 }}>{postDetail?.Content}</Text>
+                            <Text style={{ color: '#fff', fontSize: 16, marginTop: 16 }}>
+                                {postDetail?.Content}
+                            </Text>
                         </View>
                         <FlatList
                             data={postDetail?.Images}
@@ -314,12 +365,20 @@ const Page = () => {
                             // decelerationRate="fast"
                             ListFooterComponent={FooterButtons}
                         />
-                        <CommentPost idPost={id} commentNew={commentResponse} setIsMenuOpen={setIsMenuOpen} />
+                        <CommentPost
+                            idPost={id}
+                            commentNew={commentResponse}
+                            setIsMenuOpen={setIsMenuOpen}
+                        />
                     </>
                 )}
             </AnimatedScrollView>
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-                <NewComment ref={commentInputRef} postId={id} setCommentResponse={setCommentResponse} />
+                <NewComment
+                    ref={commentInputRef}
+                    postId={id}
+                    setCommentResponse={setCommentResponse}
+                />
             </KeyboardAvoidingView>
         </View>
     );

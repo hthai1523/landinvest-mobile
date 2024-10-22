@@ -18,11 +18,9 @@ const auctionFormSchema = z.object({
         required_error: 'Tên tài sản là bắt buộc',
     }),
     toChucDGTS: z.string({
-        required_error: 'Tên tổ chức là bắt buộc',
+        required_error: 'Tên tổ chức đấu giá tài sản là bắt buộc',
     }),
-    chuTaiSan: z.string({
-        required_error: 'Chủ tài sản là bắt buộc',
-    }),
+   
     tuNgay: z
         .string({
             required_error: 'Ngày là bắt buộc',
@@ -55,23 +53,6 @@ const auctionFormSchema = z.object({
             invalid_type_error: 'Giá phải là 1 số',
         })
         .min(0, 'Giá phải lớn hơn 0'),
-    tuNgayCongKhai: z
-        .string({
-            required_error: 'Ngày là bắt buộc',
-        })
-        .refine((date) => !isNaN(new Date(date).getTime()), {
-            message: 'Ngày không hợp lệ',
-        }),
-    denNgayCongKhai: z
-        .string({
-            required_error: 'Ngày là bắt buộc',
-        })
-        .refine((date) => !isNaN(new Date(date).getTime()), {
-            message: 'Ngày không hợp lệ',
-        }),
-    tieuChi: z.string({
-        required_error: 'Tiêu chí là bắt buộc',
-    }),
 });
 
 type AuctionFormSchema = z.infer<typeof auctionFormSchema>;
@@ -326,38 +307,6 @@ const AuctionsForm = ({ setIsBackDrop }: { setIsBackDrop: (params: boolean) => v
             <View>
                 <Controller
                     control={control}
-                    name="chuTaiSan"
-                    render={({ field: { onChange, onBlur, value } }) => (
-                        <>
-                            <TextInput
-                                placeholder="Chủ tài sản"
-                                onBlur={onBlur}
-                                onChangeText={onChange}
-                                value={value}
-                                keyboardType="default"
-                                autoCapitalize="none"
-                                textInputStyle={{
-                                    width: '100%',
-                                    borderColor: errors.chuTaiSan && 'red',
-                                    borderWidth: 1,
-                                    borderRadius: 12,
-                                    backgroundColor: '#fff',
-                                }}
-                                mainColor={Colors.primary.green}
-                                placeholderTextColor={Colors.primary.green}
-                            />
-                            {errors.chuTaiSan && (
-                                <Text style={{ color: 'red', marginTop: 4 }}>
-                                    {errors.chuTaiSan.message}
-                                </Text>
-                            )}
-                        </>
-                    )}
-                />
-            </View>
-            <View>
-                <Controller
-                    control={control}
                     name="tuNgay"
                     render={({ field: { onChange, onBlur, value } }) => (
                         <>
@@ -544,32 +493,6 @@ const AuctionsForm = ({ setIsBackDrop }: { setIsBackDrop: (params: boolean) => v
                             {errors.denGia && (
                                 <Text style={{ color: 'red', marginTop: 4 }}>
                                     {errors.denGia.message}
-                                </Text>
-                            )}
-                        </>
-                    )}
-                />
-            </View>
-            <View>
-                <Controller
-                    control={control}
-                    name="tieuChi"
-                    render={({ field: { onChange, onBlur, value } }) => (
-                        <>
-                            <SelectList
-                                setSelected={onChange}
-                                data={TIEU_CHI}
-                                save="value"
-                                placeholder="Tiêu chí"
-                                search={false}
-                                arrowicon={<Ionicons name="chevron-down" size={18} />}
-                                boxStyles={styles.selectBox}
-                                inputStyles={{ color: Colors.primary.green }}
-                                dropdownStyles={styles.dropdown}
-                            />
-                            {errors.tieuChi && (
-                                <Text style={{ color: 'red', marginTop: 4 }}>
-                                    {errors.tieuChi.message}
                                 </Text>
                             )}
                         </>

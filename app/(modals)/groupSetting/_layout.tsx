@@ -19,6 +19,7 @@ const LayoutSetting = () => {
                     headerLargeTitle: true,
                     headerStyle: { backgroundColor: Colors.primary.header },
                     headerTintColor: '#d9d9d9',
+                    headerTitleAlign: 'center',
                     headerLeft: () => (
                         <TouchableOpacity onPress={() => router.back()} className="flex flex-row items-center">
                             <Feather name="chevron-left" size={20} color="#d9d9d9" />

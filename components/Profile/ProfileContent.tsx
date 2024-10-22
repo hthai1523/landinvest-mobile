@@ -93,7 +93,7 @@ const ProfileContent = () => {
                     </Pressable>
                     <Animated.View style={[styles.indicator, indicatorStyle]} />
                 </View>
-                    <RenderPostSectionProfile />
+                    <RenderPostSectionProfile  />
             </View>
         </ScrollView>
     );

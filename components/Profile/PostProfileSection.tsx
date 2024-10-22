@@ -92,7 +92,7 @@ const PostProfileSection = ({ post }: { post: Post }) => {
                         </View>
                     </View>
                 </View>
-                {post && post?.Images.length > 0 && (
+                {post && post.Images && post?.Images.length > 0 && (
                     <CustomImage source={post.Images[0]} className="w-20 h-full rounded-md mr-2" />
                 )}
             </TouchableOpacity>

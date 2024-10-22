@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, Platform } from 'react-native';
 import React, { memo, useCallback } from 'react';
 import { router, Stack } from 'expo-router';
 import Colors from '@/constants/Colors';
@@ -19,16 +19,20 @@ const SearchLayout = () => {
                 name="index"
                 options={{
                     headerTitle: 'Tìm kiếm địa điểm',
-                    headerLargeTitle: true,
+                    headerLargeTitle: Platform.OS === 'ios' ? true : false,
                     headerTintColor: '#d9d9d9',
                     headerStyle: {
                         backgroundColor: Colors.primary.header,
                     },
+                    headerTitleAlign: 'center',
                     headerTransparent: true,
                     headerBlurEffect: 'regular',
                     headerShadowVisible: false,
                     headerLeft: () => (
-                        <TouchableOpacity onPress={() => router.back()} className="flex flex-row items-center">
+                        <TouchableOpacity
+                            onPress={() => router.back()}
+                            className="flex flex-row items-center"
+                        >
                             <Feather name="chevron-left" size={20} color="#d9d9d9" />
                             <Text className="text-[#d9d9d9] ml-1 text-sm font-bold">Quay Lại</Text>
                         </TouchableOpacity>
@@ -41,6 +45,7 @@ const SearchLayout = () => {
                         cancelButtonText: 'Hủy',
                         onCancelButtonPress: () => doSearch(''),
                         onChangeText: (e) => debouncedSearch(e.nativeEvent.text),
+                        headerIconColor: '#fff',
                     },
                 }}
             />

@@ -33,10 +33,8 @@ const BottomSheetQuyHoach = forwardRef<Ref, { dismiss: () => void }>((props, ref
     const [treeData, setTreeData] = useState<TreeNode[]>([]);
     const [originalTreeData, setOriginalTreeData] = useState<TreeNode[]>([]);
     const treeViewRef = React.useRef<TreeViewRef | null>(null);
-    const [isLoading, setIsLoading] = useState<boolean>(false);
     const [search, setSearch] = useState<string>('');
     const [checkedKeys, setCheckedKeys] = useState<string[]>([]);
-    const [debouncedSearch] = useDebounce(search, 500);
 
     const updateSearch = (value: string) => {
         setSearch(value);
@@ -48,8 +46,6 @@ const BottomSheetQuyHoach = forwardRef<Ref, { dismiss: () => void }>((props, ref
         vitri?: string;
     }>();
 
-    const expandNodes = (idsToExpand: string[]) => treeViewRef.current?.expandNodes?.(idsToExpand);
-
     useEffect(() => {
         fetchProvinces();
         if (quyhoach) {
@@ -58,9 +54,7 @@ const BottomSheetQuyHoach = forwardRef<Ref, { dismiss: () => void }>((props, ref
         }
     }, []);
 
-    // console.log("checkedKeys", checkedKeys);
-
-    const fetchProvinces = async () => {
+    const fetchProvinces = useCallback(async () => {
         try {
             setLoading(true);
             const provinces = await fetchAllProvince();
@@ -84,9 +78,9 @@ const BottomSheetQuyHoach = forwardRef<Ref, { dismiss: () => void }>((props, ref
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
-    const fetchDistricts = async (provinceId: number) => {
+    const fetchDistricts = useCallback(async (provinceId: number) => {
         try {
             const districts = await fetchDistrictsByProvinces(provinceId);
             const districtDataWithPlanning = await Promise.all(
@@ -106,9 +100,9 @@ const BottomSheetQuyHoach = forwardRef<Ref, { dismiss: () => void }>((props, ref
         } catch (error) {
             return [];
         }
-    };
+    }, []);
 
-    const fetchPlanningData = async (districtId: number) => {
+    const fetchPlanningData = useCallback(async (districtId: number) => {
         try {
             const { data } = await axios.get<QuyHoachResponse[]>(
                 `https://apilandinvest.gachmen.org/quyhoach1quan/${districtId}`,
@@ -121,10 +115,9 @@ const BottomSheetQuyHoach = forwardRef<Ref, { dismiss: () => void }>((props, ref
             }
             return [];
         } catch (error) {
-            // console.error('Error fetching planning data:', error);
             return [];
         }
-    };
+    }, []);
 
     const handleSelect = useCallback(async (checkedKeysValue: string[]) => {
         if (!Array.isArray(checkedKeysValue)) return;
@@ -149,14 +142,13 @@ const BottomSheetQuyHoach = forwardRef<Ref, { dismiss: () => void }>((props, ref
                 const { centerLatitude, centerLongitude } = getBoundingBoxCenterFromString(
                     data[0]?.boundingbox,
                 );
-                router.push({
-                    pathname: '/(tabs)/',
-                    params: {
-                        quyhoach: quyhoachIds.toString(),
-                        vitri: `${centerLatitude},${centerLongitude}`,
-                    },
+                router.setParams({
+                    quyhoach: quyhoachIds.toString(),
+                    vitri: `${centerLatitude},${centerLongitude}`,
                 });
-            } catch (error) {}
+            } catch (error) {
+                console.error(error);
+            }
         }
     }, []);
 
@@ -173,31 +165,10 @@ const BottomSheetQuyHoach = forwardRef<Ref, { dismiss: () => void }>((props, ref
             index={1}
             onDismiss={props.dismiss}
         >
-            <View className="flex-1">
+            <ScrollView className="flex-1">
                 {loading ? (
                     <Text>Loading...</Text>
                 ) : (
-                    // <TreeSelector treeData={treeData} onSelect={handleSelect} />
-                    // <TreeSelect
-                    //     data={treeData}
-                    //     childKey="data"
-                    //     titleKey="title"
-                    //     onCheckBoxPress={(item) => console.log(item)}
-                    //     parentTextStyles={{ color: '#000' }}
-                    //     leftIconStyles={{ tintColor: '#000' }}
-                    //     rightIconStyles={{ tintColor: '#000' }}
-                    //     parentContainerStyles={{
-                    //         backgroundColor: 'transparent',
-                    //         width: '100%',
-                    //         flexDirection: 'row',
-                    //     }}
-                    //     childContainerStyles={{
-                    //         backgroundColor: 'transparent',
-                    //         width: '100%',
-                    //         flexDirection: 'row',
-                    //     }}
-                    //     childTextStyles={{ color: '#000' }}
-                    // />
                     <>
                         <SearchBar
                             placeholder="Tìm kiếm..."
@@ -227,12 +198,12 @@ const BottomSheetQuyHoach = forwardRef<Ref, { dismiss: () => void }>((props, ref
                         <TreeView
                             ref={treeViewRef}
                             data={treeData}
-                            onCheck={(key) => handleSelect(key)}
-                            preselectedIds={['plan-64']}
+                            onCheck={handleSelect}
+                            preselectedIds={checkedKeys}
                         />
                     </>
                 )}
-            </View>
+            </ScrollView>
         </BottomSheetModal>
     );
 });

@@ -31,6 +31,7 @@ const Page = () => {
     const snapPoints = useMemo(() => ['10%', '50%'], []);
     const [isExpanded, setIsExpanded] = useState(false);
     const [currentTag, setCurrentTag] = useState('#'); // Current tag being typed
+    const [isOpenModal, setIsOpenModal] = useState<boolean>(false)
 
     const { value, images, setValue, addImage, removeImage, addTag, removeTag } = usePostStore();
     const user = useAuthStore.getState().user;
@@ -68,11 +69,11 @@ const Page = () => {
         if (text.endsWith(' ')) {
             const newTag = currentTag.trim();
             if (newTag.length > 1) {
-                addTag(newTag); 
+                addTag(newTag);
             }
-            setCurrentTag('#'); 
+            setCurrentTag('#');
         } else {
-            setCurrentTag(text); 
+            setCurrentTag(text);
         }
     };
 
@@ -133,12 +134,20 @@ const Page = () => {
             imageStyle = { width: width - 20, height: width - 20, marginBottom: imageMargin };
             containerStyle = { flexDirection: 'column' };
         } else if (imageCount === 2) {
-            imageStyle = { width: (width - 25) / 2, height: (width - 25) / 2, marginBottom: imageMargin };
+            imageStyle = {
+                width: (width - 25) / 2,
+                height: (width - 25) / 2,
+                marginBottom: imageMargin,
+            };
             containerStyle = { flexDirection: 'row', justifyContent: 'space-between' };
         } else {
             const imageSize = (width - imageMargin * 4) / 3;
             imageStyle = { width: imageSize, height: imageSize, marginBottom: imageMargin };
-            containerStyle = { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-start' };
+            containerStyle = {
+                flexDirection: 'row',
+                flexWrap: 'wrap',
+                justifyContent: 'flex-start',
+            };
         }
 
         return (
@@ -180,24 +189,32 @@ const Page = () => {
                     showsVerticalScrollIndicator={false}
                     keyboardDismissMode="on-drag"
                 >
-                    <View className="flex flex-row items-center space-x-2 p-2">
-                        {user?.avatarLink ? (
-                            <CustomImage
-                                source={{ uri: user?.avatarLink }}
-                                className="w-10 h-10 rounded-full bg-[#F9DFC0]"
-                            />
-                        ) : (
-                            <Avatar
-                                title={user?.FullName ? user.FullName.slice(0, 1) : 'T'}
-                                containerStyle={{
-                                    backgroundColor: Colors.primary.green,
-                                    borderRadius: 99999,
-                                    width: 40,
-                                    height: 40,
-                                }}
-                            />
-                        )}
-                        <Text className="text-white text-base font-semibold">{user?.FullName}</Text>
+                    <View className="flex flex-row items-center justify-between">
+                        <View className="flex flex-row items-center space-x-2 p-2">
+                            {user?.avatarLink ? (
+                                <CustomImage
+                                    source={{ uri: user?.avatarLink }}
+                                    className="w-10 h-10 rounded-full bg-[#F9DFC0]"
+                                />
+                            ) : (
+                                <Avatar
+                                    title={user?.FullName ? user.FullName.slice(0, 1) : 'T'}
+                                    containerStyle={{
+                                        backgroundColor: Colors.primary.green,
+                                        borderRadius: 99999,
+                                        width: 40,
+                                        height: 40,
+                                    }}
+                                />
+                            )}
+                            <Text className="text-white text-base font-semibold">
+                                {user?.FullName}
+                            </Text>
+                        </View>
+                        <TouchableOpacity className='p-2 flex flex-row items-center'>
+                            <Text className='font-normal text-sm text-white mr-1'>Chọn group</Text>
+                            <Ionicons name='chevron-down' size={20} color={'#fff'} />
+                        </TouchableOpacity>
                     </View>
                     <View
                         style={{ flex: 1, backgroundColor: 'white', padding: 10, borderRadius: 10 }}
@@ -263,31 +280,55 @@ const Page = () => {
                     >
                         <TouchableOpacity
                             onPress={pickImage}
-                            style={{ flexDirection: isExpanded ? 'row' : 'column', alignItems: 'center' }}
+                            style={{
+                                flexDirection: isExpanded ? 'row' : 'column',
+                                alignItems: 'center',
+                            }}
                         >
                             <Ionicons name="image" size={30} color="#1E90FF" />
-                            {isExpanded && <Text className="text-white font-medium text-base ml-2">Ảnh</Text>}
+                            {isExpanded && (
+                                <Text className="text-white font-medium text-base ml-2">Ảnh</Text>
+                            )}
                         </TouchableOpacity>
 
                         <TouchableOpacity
-                            style={{ flexDirection: isExpanded ? 'row' : 'column', alignItems: 'center' }}
+                            style={{
+                                flexDirection: isExpanded ? 'row' : 'column',
+                                alignItems: 'center',
+                            }}
                         >
                             <Ionicons name="camera" size={30} color="#32CD32" />
-                            {isExpanded && <Text className="text-white font-medium text-base ml-2">Vị trí</Text>}
+                            {isExpanded && (
+                                <Text className="text-white font-medium text-base ml-2">
+                                    Vị trí
+                                </Text>
+                            )}
                         </TouchableOpacity>
 
                         <TouchableOpacity
-                            style={{ flexDirection: isExpanded ? 'row' : 'column', alignItems: 'center' }}
+                            style={{
+                                flexDirection: isExpanded ? 'row' : 'column',
+                                alignItems: 'center',
+                            }}
                         >
                             <Ionicons name="videocam" size={30} color="#FFA500" />
-                            {isExpanded && <Text className="text-white font-medium text-base ml-2">Video</Text>}
+                            {isExpanded && (
+                                <Text className="text-white font-medium text-base ml-2">Video</Text>
+                            )}
                         </TouchableOpacity>
 
                         <TouchableOpacity
-                            style={{ flexDirection: isExpanded ? 'row' : 'column', alignItems: 'center' }}
+                            style={{
+                                flexDirection: isExpanded ? 'row' : 'column',
+                                alignItems: 'center',
+                            }}
                         >
                             <Ionicons name="document" size={30} color="#ADADAD" />
-                            {isExpanded && <Text className="text-white font-medium text-base ml-2">Tài liệu</Text>}
+                            {isExpanded && (
+                                <Text className="text-white font-medium text-base ml-2">
+                                    Tài liệu
+                                </Text>
+                            )}
                         </TouchableOpacity>
                     </View>
                 </BottomSheet>
