@@ -11,6 +11,12 @@ import Colors from '@/constants/Colors';
 
 import { MenuProvider } from 'react-native-popup-menu';
 import { PaperProvider } from 'react-native-paper';
+import { configureReanimatedLogger, ReanimatedLogLevel } from 'react-native-reanimated';
+
+configureReanimatedLogger({
+    level: ReanimatedLogLevel.warn,
+    strict: false, // Reanimated runs in strict mode by default
+});
 
 export {
     // Catch any errors thrown by the Layout component.
@@ -103,6 +109,10 @@ function RootLayoutNav() {
                                 />
                                 <Stack.Screen
                                     name="listing/profileUser/[id]"
+                                    options={{ headerShown: false }}
+                                />
+                                <Stack.Screen
+                                    name="listing/auction/[id]"
                                     options={{ headerShown: false }}
                                 />
                             </Stack>

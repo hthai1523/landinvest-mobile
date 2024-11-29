@@ -227,6 +227,7 @@ const BottomSheetAddLocation = forwardRef<Ref, BottomSheetAddLocationProps>(({ d
             snapPoints={snapPoints}
             index={2}
             onDismiss={dismiss}
+            enableContentPanningGesture={false}
         >
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}

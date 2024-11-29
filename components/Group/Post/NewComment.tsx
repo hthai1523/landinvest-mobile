@@ -1,4 +1,12 @@
-import { View, Text, TextInput, FlatList, TouchableOpacity, Alert, SafeAreaView } from 'react-native';
+import {
+    View,
+    Text,
+    TextInput,
+    FlatList,
+    TouchableOpacity,
+    Alert,
+    SafeAreaView,
+} from 'react-native';
 import React, { useCallback, useState, forwardRef, useImperativeHandle } from 'react';
 import { AnimatedTextInput, AnimatedTouchableOpacity } from '@/components/ui/AnimatedComponents';
 import { useDebounce } from 'use-debounce';
@@ -21,7 +29,9 @@ interface NewCommentProps {
 const NewComment = forwardRef<TextInput, NewCommentProps>(({ postId, setCommentResponse }, ref) => {
     const [comment, setComment] = useState<string>('');
     const [commentDebounce] = useDebounce(comment, 500);
-    const [images, setImages] = useState<string[]>([]);
+    const [images, setImages] = useState<{ uri: string; type: 'image' | 'video'; name: string }[]>(
+        [],
+    );
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [isLoadingPost, setIsLoadingPost] = useState<boolean>(false);
     const isLoggedIn = useAuthStore.getState().isAuthenticated;
@@ -33,20 +43,26 @@ const NewComment = forwardRef<TextInput, NewCommentProps>(({ postId, setCommentR
         }
         try {
             setIsLoadingPost(true);
-            console.log(postId, comment, images);
             if (postId && comment) {
-                const res = await CreateComment(postId, comment, images);
+                const formData = new FormData();
+
+                formData.append('Content', comment);
+
+                formData.append('Images', images as any);
+                console.log('formData', formData);
+                const res = await CreateComment(postId, formData);
                 if (res.Status === 200) {
                     setCommentResponse(res.data);
-                    console.log(res.data);
+                    console.log('res.data', res.data);
                     setComment('');
                     setImages([]);
                 }
             } else {
-                Alert.alert("Vui lòng nhập nội dung bình luận")
+                Alert.alert('Vui lòng nhập nội dung bình luận');
             }
         } catch (error) {
             Alert.alert('Bình luận không thành công vui lòng thử lại');
+            console.log(error);
         } finally {
             setIsLoadingPost(false);
         }
@@ -62,15 +78,13 @@ const NewComment = forwardRef<TextInput, NewCommentProps>(({ postId, setCommentR
 
             if (!result.canceled) {
                 setIsLoading(true);
-                const base64Images: string[] = await Promise.all(
-                    result.assets.map(async (asset) => {
-                        const base64 = await FileSystem.readAsStringAsync(asset.uri, {
-                            encoding: FileSystem.EncodingType.Base64,
-                        });
-                        return `${base64}`;
-                    }),
-                );
-                setImages(base64Images);
+                result.assets.forEach((item) => {
+                    setImages((images) => [
+                        ...images,
+                        { uri: item.uri, type: 'image', name: 'Untitled' },
+                    ]);
+                });
+                // setImages(base64Images);
             }
         } catch (error) {
             console.error('Error picking images:', error);
@@ -79,12 +93,15 @@ const NewComment = forwardRef<TextInput, NewCommentProps>(({ postId, setCommentR
         }
     };
 
-    const removeImage = useCallback((index: number) => setImages((images) => images.filter((_, i) => i !== index)), []);
+    const removeImage = useCallback(
+        (index: number) => setImages((images) => images.filter((_, i) => i !== index)),
+        [],
+    );
 
-    const renderImages = (item: string, index: number) => (
+    const renderImages = (item: { uri: string }, index: number) => (
         <Animated.View layout={LinearTransition.springify().damping(80).stiffness(200)}>
             <CustomImage
-                source={{ uri: `data:image/jpeg;base64,${item}` }}
+                source={{ uri: item.uri }}
                 resizeMode="cover"
                 className="w-20 h-20 rounded-md"
             />

@@ -28,7 +28,7 @@ const passwordSchema = z
     })
     .refine((data) => data.newPassword === data.confirmPassword, {
         message: 'Mật khẩu mới và xác nhận mật khẩu không khớp',
-        path: ['confirmPassword'], // error path
+        path: ['confirmPassword'], 
     });
 
 type PasswordFormValues = z.infer<typeof passwordSchema>;

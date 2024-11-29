@@ -1,4 +1,13 @@
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
+import {
+    View,
+    Text,
+    StyleSheet,
+    FlatList,
+    TouchableOpacity,
+    Alert,
+    KeyboardAvoidingView,
+    Platform,
+} from 'react-native';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Colors from '@/constants/Colors';
 import { Organization } from '@/constants/interface';
@@ -12,6 +21,7 @@ import { Ionicons } from '@expo/vector-icons';
 import CustomButton from '../ui/Button';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { SelectList } from 'react-native-dropdown-select-list';
+import FormFieldAuction from '../ui/FormFieldAuction';
 
 const auctionFormSchema = z.object({
     tenTaiSan: z.string({
@@ -20,7 +30,7 @@ const auctionFormSchema = z.object({
     toChucDGTS: z.string({
         required_error: 'Tên tổ chức đấu giá tài sản là bắt buộc',
     }),
-   
+
     tuNgay: z
         .string({
             required_error: 'Ngày là bắt buộc',
@@ -38,63 +48,44 @@ const auctionFormSchema = z.object({
     tinhThanhPho: z.string({
         required_error: 'Tên tỉnh thành phố là bắt buộc',
     }),
-    quanHuyen: z.string({
-        required_error: 'Tên quận huyện là bắt buộc',
-    }),
+    // quanHuyen: z.string({
+    //     required_error: 'Tên quận huyện là bắt buộc',
+    // }),
     tuGia: z
-        .number({
+        .string({
             required_error: 'Giá là bắt buộc',
             invalid_type_error: 'Giá phải là 1 số',
         })
         .min(0, 'Giá phải lớn hơn 0'),
     denGia: z
-        .number({
+        .string({
             required_error: 'Giá là bắt buộc',
             invalid_type_error: 'Giá phải là 1 số',
         })
         .min(0, 'Giá phải lớn hơn 0'),
 });
 
-type AuctionFormSchema = z.infer<typeof auctionFormSchema>;
+export type AuctionFormSchema = z.infer<typeof auctionFormSchema>;
 interface TransformedOrganization {
     key: number;
     value: string;
 }
 
-const TIEU_CHI = [
-    {
-        key: '1',
-        value: 'Ngày công khai việc đấu giá',
-    },
-    {
-        key: '2',
-        value: 'Ngày tổ chức đấu giá',
-    },
-];
+interface IProps {
+    setIsBackDrop: (value: boolean) => void;
+    onSubmitFilter: (value: AuctionFormSchema) => void;
+}
 
-const AuctionsForm = ({ setIsBackDrop }: { setIsBackDrop: (params: boolean) => void }) => {
+const AuctionsForm = ({ setIsBackDrop, onSubmitFilter }: IProps) => {
     const [listOrganizer, setListOrganizer] = useState<{ key: number; value: string }[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [isDropdownVisible, setIsDropdownVisible] = useState(false);
     const [isDropdownProvinceVisible, setIsDropdownProvinceVisible] = useState(false);
-    const [datePickerVisibility, setDatePickerVisibility] = useState<{ [key: string]: boolean }>({
-        tuNgay: false,
-        denNgay: false,
-    });
+
     const [listProvince, setListProvince] = useState<
         { TenTinhThanhPho: string; TinhThanhPhoID: number }[]
     >([]);
 
-    const toggleDatePicker = (field: string) => {
-        setDatePickerVisibility((prevState) => ({
-            ...prevState,
-            [field]: !prevState[field],
-        }));
-    };
-
-    const formatDate = (date: Date) => {
-        return date.toLocaleDateString('vi-VN');
-    };
     const {
         control,
         handleSubmit,
@@ -131,17 +122,21 @@ const AuctionsForm = ({ setIsBackDrop }: { setIsBackDrop: (params: boolean) => v
     useEffect(() => {
         getListOrganization();
         getListProvince();
-    }, [getListOrganization]);
+    }, []);
 
     const filteredOrganizers = useMemo(() => {
         return listOrganizer.filter((org) =>
             org.value.toLowerCase().includes(searchQuery.toLowerCase()),
         );
     }, [listOrganizer, searchQuery]);
+
     const filteredProvinces = useMemo(() => {
-        return listProvince.filter((item) =>
-            item.TenTinhThanhPho.toLowerCase().includes(searchQuery.toLowerCase()),
-        );
+        if (searchQuery) {
+            return listProvince.filter((item) =>
+                item.TenTinhThanhPho.toLowerCase().includes(searchQuery.toLowerCase()),
+            );
+        }
+        return listProvince;
     }, [listProvince, searchQuery]);
 
     const renderItem = useCallback(
@@ -169,8 +164,8 @@ const AuctionsForm = ({ setIsBackDrop }: { setIsBackDrop: (params: boolean) => v
         }) => (
             <TouchableOpacity
                 onPress={() => {
-                    // setSearchQuery(item.value);
-                    onChange(item);
+                    // setSearchQuery(item.TinhThanhPhoID.toString());
+                    onChange(item.TenTinhThanhPho);
                     setIsDropdownProvinceVisible(false);
                     setIsBackDrop(false);
                 }}
@@ -185,402 +180,283 @@ const AuctionsForm = ({ setIsBackDrop }: { setIsBackDrop: (params: boolean) => v
         <Text style={styles.errorText}>{message}</Text>
     );
 
-    const onSubmit = (data: AuctionFormSchema) => {
-        console.log(data);
+    const onSubmit = async (data: AuctionFormSchema) => {
+        // onSubmitFilter(data)
+        console.log('hello');
+        console.log('data', data);
     };
 
     return (
-        <View
-            className="p-3 rounded-[20px] space-y-3"
-            style={{ backgroundColor: Colors.primary.header }}
-        >
-            <View>
-                <Controller
+        <View className="p-3 rounded-[20px]" style={{ backgroundColor: Colors.primary.header }}>
+         
+                <FormFieldAuction
+                    label="Tên tài sản"
                     control={control}
                     name="tenTaiSan"
-                    render={({ field: { onChange, onBlur, value } }) => (
-                        <>
-                            <TextInput
-                                placeholder="Tên tài sản"
-                                onBlur={onBlur}
-                                onChangeText={onChange}
-                                value={value}
-                                keyboardType="default"
-                                autoCapitalize="none"
-                                textInputStyle={{
-                                    width: '100%',
-                                    borderColor: errors.tenTaiSan && 'red',
-                                    borderWidth: 1,
-                                    borderRadius: 12,
-                                    backgroundColor: '#fff',
-                                }}
-                                mainColor={Colors.primary.green}
-                                placeholderTextColor={Colors.primary.green}
-                            />
-                            {errors.tenTaiSan && (
-                                <Text style={{ color: 'red', marginTop: 4 }}>
-                                    {errors.tenTaiSan.message}
-                                </Text>
-                            )}
-                        </>
-                    )}
+                    errors={errors}
+                    type="text"
                 />
-            </View>
-            <View>
-                <Controller
-                    control={control}
-                    name="toChucDGTS"
-                    render={({ field: { onChange, value } }) => (
-                        <>
-                            <TouchableOpacity
-                                onPress={() => {
-                                    setIsDropdownVisible(true);
-                                    setIsBackDrop(true);
-                                }}
-                                style={[
-                                    styles.inputContainer,
-                                    {
-                                        borderWidth: 1,
-                                        borderColor: value && Colors.primary.green,
-                                    },
-                                ]}
-                                className="px-2 py-4 bg-white rounded-xl w-full"
-                            >
-                                <Text style={{ color: Colors.primary.green, flex: 1 }}>
-                                    {value || 'Chọn tổ chức ĐGTS'}
-                                </Text>
-                                <TouchableOpacity onPress={() => setIsDropdownVisible(true)}>
-                                    <Ionicons name="chevron-down" size={18} />
-                                </TouchableOpacity>
-                            </TouchableOpacity>
-                            {isDropdownVisible && (
-                                <Modal
-                                    isVisible={isDropdownVisible}
-                                    onBackdropPress={() => setIsDropdownVisible(false)}
-                                    backdropOpacity={0}
-                                    backdropColor="transparent"
-                                    animationIn="fadeIn"
-                                    animationOut="fadeOut"
-                                    animationInTiming={300}
-                                    animationOutTiming={300}
-                                    useNativeDriver={true}
-                                    hideModalContentWhileAnimating={true}
-                                    style={{ margin: 0, justifyContent: 'flex-end' }}
+                <View className="mb-3">
+                    <Controller
+                        control={control}
+                        name="toChucDGTS"
+                        render={({ field: { onChange, value } }) => (
+                            <>
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        setIsDropdownVisible(true);
+                                        setIsBackDrop(true);
+                                    }}
+                                    style={[
+                                        styles.inputContainer,
+                                        {
+                                            borderWidth: 1,
+                                            borderColor: value && Colors.primary.green,
+                                        },
+                                    ]}
+                                    className="px-2 py-4 bg-white rounded-xl w-full"
                                 >
-                                    <View style={styles.modalContainer}>
-                                        <View style={styles.modalContent}>
-                                            <TextInput
-                                                placeholder="Tìm kiếm tổ chức"
-                                                value={searchQuery}
-                                                onChangeText={setSearchQuery}
-                                                textInputStyle={styles.searchInput}
-                                                mainColor={Colors.primary.green}
-                                                placeholderTextColor={Colors.primary.green}
-                                            />
-                                            <FlatList
-                                                data={filteredOrganizers}
-                                                renderItem={({ item }) =>
-                                                    renderItem({ item, onChange })
-                                                }
-                                                keyExtractor={(item) => item.key.toString()}
-                                                style={styles.flatList}
-                                            />
-                                            <CustomButton
-                                                style={styles.closeButton}
-                                                onPress={() => {
-                                                    setIsDropdownVisible(false);
-                                                    setIsBackDrop(false);
-                                                }}
-                                                title="Đóng"
-                                            />
+                                    <Text style={{ color: Colors.primary.green, flex: 1 }}>
+                                        {value || 'Chọn tổ chức ĐGTS'}
+                                    </Text>
+                                    <TouchableOpacity onPress={() => setIsDropdownVisible(true)}>
+                                        <Ionicons name="chevron-down" size={18} />
+                                    </TouchableOpacity>
+                                </TouchableOpacity>
+                                {isDropdownVisible && (
+                                    <Modal
+                                        isVisible={isDropdownVisible}
+                                        onBackdropPress={() => setIsDropdownVisible(false)}
+                                        backdropOpacity={0}
+                                        backdropColor="transparent"
+                                        animationIn="fadeIn"
+                                        animationOut="fadeOut"
+                                        animationInTiming={300}
+                                        animationOutTiming={300}
+                                        useNativeDriver={true}
+                                        hideModalContentWhileAnimating={true}
+                                        style={{ margin: 0, justifyContent: 'flex-end' }}
+                                    >
+                                        <View style={styles.modalContainer}>
+                                            <View style={styles.modalContent}>
+                                                <TextInput
+                                                    placeholder="Tìm kiếm tổ chức"
+                                                    value={searchQuery}
+                                                    onChangeText={setSearchQuery}
+                                                    textInputStyle={styles.searchInput}
+                                                    mainColor={Colors.primary.green}
+                                                    placeholderTextColor={Colors.primary.green}
+                                                />
+                                                <FlatList
+                                                    data={filteredOrganizers}
+                                                    renderItem={({ item }) =>
+                                                        renderItem({ item, onChange })
+                                                    }
+                                                    keyExtractor={(item) => item.key.toString()}
+                                                    style={styles.flatList}
+                                                />
+                                                <CustomButton
+                                                    style={styles.closeButton}
+                                                    onPress={() => {
+                                                        setIsDropdownVisible(false);
+                                                        setIsBackDrop(false);
+                                                    }}
+                                                    title="Đóng"
+                                                />
+                                            </View>
                                         </View>
-                                    </View>
-                                </Modal>
-                            )}
-                            {errors.toChucDGTS && (
-                                <ErrorMessage message={errors.toChucDGTS.message || ''} />
-                            )}
-                        </>
-                    )}
-                />
-            </View>
-            <View>
-                <Controller
+                                    </Modal>
+                                )}
+                                {errors.toChucDGTS && (
+                                    <ErrorMessage message={errors.toChucDGTS.message || ''} />
+                                )}
+                            </>
+                        )}
+                    />
+                </View>
+                {/* tu ngay */}
+                {/* <View>
+                    <Controller
+                        control={control}
+                        name="tuNgay"
+                        render={({ field: { onChange, onBlur, value } }) => (
+                            <>
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        toggleDatePicker('tuNgay');
+                                        onBlur();
+                                    }}
+                                    style={[
+                                        styles.inputContainer,
+                                        {
+                                            borderWidth: 1,
+                                            borderColor: value ? Colors.primary.green : '#ccc',
+                                        },
+                                    ]}
+                                    className="px-2 py-4 bg-white rounded-xl w-full"
+                                >
+                                    <Text
+                                        style={{
+                                            color: Colors.primary.green,
+                                            flex: 1,
+                                        }}
+                                    >
+                                        {value ? formatDate(new Date(value)) : 'Từ ngày'}
+                                    </Text>
+                                    <Ionicons
+                                        name="calendar-outline"
+                                        size={18}
+                                        color={Colors.primary.green}
+                                    />
+                                </TouchableOpacity>
+    
+                                {datePickerVisibility.tuNgay && (
+                                    <DateTimePicker
+                                        value={value ? new Date(value) : new Date()}
+                                        mode="date"
+                                        display="inline"
+                                        themeVariant="light"
+                                        onChange={(event, selectedDate) => {
+                                            toggleDatePicker('tuNgay');
+                                            if (event.type === 'set' && selectedDate) {
+                                                onChange(selectedDate.toISOString());
+                                            }
+                                        }}
+                                        style={{
+                                            backgroundColor: '#fff',
+                                            marginTop: 4,
+                                            borderRadius: 12,
+                                            overflow: 'hidden',
+                                        }}
+                                    />
+                                )}
+    
+                                {errors.tuNgay && (
+                                    <Text style={{ color: 'red', marginTop: 4 }}>
+                                        {errors.tuNgay.message}
+                                    </Text>
+                                )}
+                            </>
+                        )}
+                    />
+                </View> */}
+                <FormFieldAuction
+                    label="Từ ngày"
                     control={control}
                     name="tuNgay"
-                    render={({ field: { onChange, onBlur, value } }) => (
-                        <>
-                            <TouchableOpacity
-                                onPress={() => {
-                                    toggleDatePicker('tuNgay');
-                                    onBlur();
-                                }}
-                                style={[
-                                    styles.inputContainer,
-                                    {
-                                        borderWidth: 1,
-                                        borderColor: value ? Colors.primary.green : '#ccc',
-                                    },
-                                ]}
-                                className="px-2 py-4 bg-white rounded-xl w-full"
-                            >
-                                <Text
-                                    style={{
-                                        color: Colors.primary.green,
-                                        flex: 1,
-                                    }}
-                                >
-                                    {value ? formatDate(new Date(value)) : 'Từ ngày'}
-                                </Text>
-                                <Ionicons
-                                    name="calendar-outline"
-                                    size={18}
-                                    color={Colors.primary.green}
-                                />
-                            </TouchableOpacity>
-
-                            {datePickerVisibility.tuNgay && (
-                                <DateTimePicker
-                                    value={value ? new Date(value) : new Date()}
-                                    mode="date"
-                                    display="inline"
-                                    themeVariant="light"
-                                    onChange={(event, selectedDate) => {
-                                        toggleDatePicker('tuNgay');
-                                        if (event.type === 'set' && selectedDate) {
-                                            onChange(selectedDate.toISOString());
-                                        }
-                                    }}
-                                    style={{
-                                        backgroundColor: '#fff',
-                                        marginTop: 4,
-                                        borderRadius: 12,
-                                        overflow: 'hidden',
-                                    }}
-                                />
-                            )}
-
-                            {errors.tuNgay && (
-                                <Text style={{ color: 'red', marginTop: 4 }}>
-                                    {errors.tuNgay.message}
-                                </Text>
-                            )}
-                        </>
-                    )}
+                    errors={errors}
+                    type="date"
                 />
-            </View>
-            <View>
-                <Controller
+                {/* den ngay */}
+                <FormFieldAuction
+                    label="Đến ngày"
                     control={control}
                     name="denNgay"
-                    render={({ field: { onChange, onBlur, value } }) => (
-                        <>
-                            <TouchableOpacity
-                                onPress={() => {
-                                    toggleDatePicker('denNgay');
-                                    onBlur();
-                                }}
-                                style={[
-                                    styles.inputContainer,
-                                    {
-                                        borderWidth: 1,
-                                        borderColor: value ? Colors.primary.green : '#ccc',
-                                    },
-                                ]}
-                                className="px-2 py-4 bg-white rounded-xl w-full"
-                            >
-                                <Text
-                                    style={{
-                                        color: Colors.primary.green,
-                                        flex: 1,
-                                    }}
-                                >
-                                    {value ? formatDate(new Date(value)) : 'Đến ngày'}
-                                </Text>
-                                <Ionicons
-                                    name="calendar-outline"
-                                    size={18}
-                                    color={Colors.primary.green}
-                                />
-                            </TouchableOpacity>
-
-                            {datePickerVisibility.denNgay && (
-                                <DateTimePicker
-                                    value={value ? new Date(value) : new Date()}
-                                    mode="date"
-                                    display="inline"
-                                    themeVariant="light"
-                                    onChange={(event, selectedDate) => {
-                                        toggleDatePicker('denNgay');
-                                        if (event.type === 'set' && selectedDate) {
-                                            onChange(selectedDate.toISOString());
-                                        }
-                                    }}
-                                    style={{
-                                        backgroundColor: '#fff',
-                                        marginTop: 4,
-                                        borderRadius: 12,
-                                        overflow: 'hidden',
-                                    }}
-                                />
-                            )}
-
-                            {errors.denNgay && (
-                                <Text style={{ color: 'red', marginTop: 4 }}>
-                                    {errors.denNgay.message}
-                                </Text>
-                            )}
-                        </>
-                    )}
+                    errors={errors}
+                    type="date"
                 />
-            </View>
-
-            <View>
-                <Controller
-                    control={control}
+                {/* tu gia */}
+                <FormFieldAuction
+                    label="Giá khởi điểm từ"
                     name="tuGia"
-                    render={({ field: { onChange, onBlur, value } }) => (
-                        <>
-                            <TextInput
-                                placeholder="Giá khởi điểm từ"
-                                onBlur={onBlur}
-                                onChangeText={onChange}
-                                value={value?.toString()}
-                                keyboardType="numeric"
-                                autoCapitalize="none"
-                                textInputStyle={{
-                                    width: '100%',
-                                    borderColor: errors.tuGia && 'red',
-                                    borderWidth: 1,
-                                    borderRadius: 12,
-                                    backgroundColor: '#fff',
-                                }}
-                                mainColor={Colors.primary.green}
-                                placeholderTextColor={Colors.primary.green}
-                            />
-                            {errors.tuGia && (
-                                <Text style={{ color: 'red', marginTop: 4 }}>
-                                    {errors.tuGia.message}
-                                </Text>
-                            )}
-                        </>
-                    )}
-                />
-            </View>
-            <View>
-                <Controller
+                    errors={errors}
                     control={control}
+                    type="text"
+                    isNumeric
+                />
+                {/* den gia */}
+                <FormFieldAuction
                     name="denGia"
-                    render={({ field: { onChange, onBlur, value } }) => (
-                        <>
-                            <TextInput
-                                placeholder="Giá khởi điểm đến"
-                                onBlur={onBlur}
-                                onChangeText={onChange}
-                                value={value?.toString()}
-                                keyboardType="numeric"
-                                autoCapitalize="none"
-                                textInputStyle={{
-                                    width: '100%',
-                                    borderColor: errors.denGia && 'red',
-                                    borderWidth: 1,
-                                    borderRadius: 12,
-                                    backgroundColor: '#fff',
-                                }}
-                                mainColor={Colors.primary.green}
-                                placeholderTextColor={Colors.primary.green}
-                            />
-                            {errors.denGia && (
-                                <Text style={{ color: 'red', marginTop: 4 }}>
-                                    {errors.denGia.message}
-                                </Text>
-                            )}
-                        </>
-                    )}
-                />
-            </View>
-            <View>
-                <Controller
                     control={control}
-                    name="tinhThanhPho"
-                    render={({ field: { onChange, onBlur, value } }) => (
-                        <>
-                            <TouchableOpacity
-                                onPress={() => {
-                                    setIsDropdownProvinceVisible(true);
-                                    setIsBackDrop(true);
-                                }}
-                                style={[
-                                    styles.inputContainer,
-                                    {
-                                        borderWidth: 1,
-                                        borderColor: value && Colors.primary.green,
-                                    },
-                                ]}
-                                className="px-2 py-4 bg-white rounded-xl w-full"
-                            >
-                                <Text style={{ color: Colors.primary.green, flex: 1 }}>
-                                    {value || 'Chọn tỉnh, thành phố'}
-                                </Text>
-                                <TouchableOpacity onPress={() => setIsDropdownVisible(true)}>
-                                    <Ionicons name="chevron-down" size={18} />
-                                </TouchableOpacity>
-                            </TouchableOpacity>
-                            {isDropdownProvinceVisible && (
-                                <Modal
-                                    isVisible={isDropdownProvinceVisible}
-                                    onBackdropPress={() => setIsDropdownProvinceVisible(false)}
-                                    backdropOpacity={0}
-                                    backdropColor="transparent"
-                                    animationIn="fadeIn"
-                                    animationOut="fadeOut"
-                                    animationInTiming={300}
-                                    animationOutTiming={300}
-                                    useNativeDriver={true}
-                                    hideModalContentWhileAnimating={true}
-                                    style={{ margin: 0, justifyContent: 'flex-end' }}
-                                >
-                                    <View style={styles.modalContainer}>
-                                        <View style={styles.modalContent}>
-                                            <TextInput
-                                                placeholder="Tìm kiếm tổ chức"
-                                                value={searchQuery}
-                                                onChangeText={setSearchQuery}
-                                                textInputStyle={styles.searchInput}
-                                                mainColor={Colors.primary.green}
-                                                placeholderTextColor={Colors.primary.green}
-                                            />
-                                            <FlatList
-                                                data={filteredProvinces}
-                                                renderItem={({ item }) =>
-                                                    renderProvinceItem({ item, onChange })
-                                                }
-                                                keyExtractor={(item) => item.TinhThanhPhoID.toString()}
-                                                style={styles.flatList}
-                                            />
-                                            <CustomButton
-                                                style={styles.closeButton}
-                                                onPress={() => {
-                                                    setIsDropdownProvinceVisible(false);
-                                                    setIsBackDrop(false);
-                                                }}
-                                                title="Đóng"
-                                            />
-                                        </View>
-                                    </View>
-                                </Modal>
-                            )}
-                            {errors.tinhThanhPho && (
-                                <Text style={{ color: 'red', marginTop: 4 }}>
-                                    {errors.tinhThanhPho.message}
-                                </Text>
-                            )}
-                        </>
-                    )}
+                    errors={errors}
+                    label="Giá khởi điểm đến"
+                    type="text"
+                    isNumeric
                 />
-            </View>
+                <View className="mb-3">
+                    <Controller
+                        control={control}
+                        name="tinhThanhPho"
+                        render={({ field: { onChange, onBlur, value } }) => (
+                            <>
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        setIsDropdownProvinceVisible(true);
+                                        setIsBackDrop(true);
+                                    }}
+                                    style={[
+                                        styles.inputContainer,
+                                        {
+                                            borderWidth: 1,
+                                            borderColor: value && Colors.primary.green,
+                                        },
+                                    ]}
+                                    className="px-2 py-4 bg-white rounded-xl w-full"
+                                >
+                                    <Text style={{ color: Colors.primary.green, flex: 1 }}>
+                                        {value || 'Chọn tỉnh, thành phố'}
+                                    </Text>
+                                    <TouchableOpacity onPress={() => setIsDropdownVisible(true)}>
+                                        <Ionicons name="chevron-down" size={18} />
+                                    </TouchableOpacity>
+                                </TouchableOpacity>
+                                {isDropdownProvinceVisible && (
+                                    <Modal
+                                        isVisible={isDropdownProvinceVisible}
+                                        onBackdropPress={() => setIsDropdownProvinceVisible(false)}
+                                        backdropOpacity={0}
+                                        backdropColor="transparent"
+                                        animationIn="fadeIn"
+                                        animationOut="fadeOut"
+                                        animationInTiming={300}
+                                        animationOutTiming={300}
+                                        useNativeDriver={true}
+                                        hideModalContentWhileAnimating={true}
+                                        style={{ margin: 0, justifyContent: 'flex-end' }}
+                                    >
+                                        <View style={styles.modalContainer}>
+                                            <View style={styles.modalContent}>
+                                                <TextInput
+                                                    placeholder="Tìm kiếm tên tỉnh thành phố"
+                                                    value={searchQuery}
+                                                    onChangeText={setSearchQuery}
+                                                    textInputStyle={styles.searchInput}
+                                                    mainColor={Colors.primary.green}
+                                                    placeholderTextColor={Colors.primary.green}
+                                                />
+                                                <FlatList
+                                                    data={filteredProvinces}
+                                                    renderItem={({ item }) =>
+                                                        renderProvinceItem({ item, onChange })
+                                                    }
+                                                    keyExtractor={(item) =>
+                                                        item.TinhThanhPhoID.toString()
+                                                    }
+                                                    style={styles.flatList}
+                                                />
+                                                <CustomButton
+                                                    style={styles.closeButton}
+                                                    onPress={() => {
+                                                        setIsDropdownProvinceVisible(false);
+                                                        setIsBackDrop(false);
+                                                    }}
+                                                    title="Đóng"
+                                                />
+                                            </View>
+                                        </View>
+                                    </Modal>
+                                )}
+                                {errors.tinhThanhPho && (
+                                    <Text style={{ color: 'red', marginTop: 4 }}>
+                                        {errors.tinhThanhPho.message}
+                                    </Text>
+                                )}
+                            </>
+                        )}
+                    />
+                </View>
 
-            <CustomButton title="Tìm kiếm" onPress={handleSubmit(onSubmit)} />
+                <CustomButton title="Tìm kiếm" onPress={handleSubmit(onSubmitFilter)} />
         </View>
     );
 };

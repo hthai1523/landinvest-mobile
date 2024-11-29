@@ -230,3 +230,101 @@ export interface Organization {
     id: number;
     name: string;
 }
+
+export interface AuctionResponse {
+    AuctionAddress: string;
+    AuctionUrl: string;
+    DepositPaymentEndTime: string;
+    DepositPaymentStartTime: string;
+    DepositPrice: string;
+    Description: string;
+    DistrictID: number;
+    EventSchedule: string;
+    Images: Array<{
+      Image: string;
+    }>;
+    LandAuctionCategoryID: number;
+    LandAuctionID: string;
+    Latitude: number | null;
+    Longitude: number | null;
+    OpenPrice: number;
+    RegistrationEndTime: string;
+    RegistrationStartTime: string;
+    Title: string;
+  }
+  
+
+  export interface AuctionDetailResponse {
+    AddressAuctionHouse: string;
+    AddressProperty: string;
+    AddressPropertyOwner: string;
+    AuctionAddress: string;
+    AuctionUrl: string;
+    CreateAt: string;
+    DepositPaymentEndTime: string;
+    DepositPaymentStartTime: string;
+    DepositPrice: string;
+    Description: string;
+    DistrictID: number;
+    EventSchedule: string;
+    Images: AuctionImage[];
+    LandAuctionCategoryID: number;
+    LandAuctionID: number;
+    Latitude: number | null;
+    Longitude: number | null;
+    NameAuctionHouse: string;
+    NameProperty: string;
+    NamePropertyOwner: string;
+    Note: string;
+    OpenPrice: number;
+    PhoneNumberAuctionHouse: string;
+    PostTime: number;
+    PreviousPost: any[]; 
+    RegistrationEndTime: string;
+    RegistrationStartTime: string;
+    Title: string;
+    Videos: AuctionVideo[];
+  }
+  
+  export interface AuctionImage {
+    AuctionImgID: number;
+    Descritption: string;
+    Image: string;
+    LandAuctionID: number;
+  }
+  
+  export interface AuctionVideo {
+    AuctionImgID: number;
+    Descritption: string;
+    LandAuctionID: number;
+    Video: string;
+  }
+  
+
+  interface QuyHoach {
+    boundingbox: string;
+    coordation: string;
+    description: string;
+    huyen_image: string;
+    idDistrict: number;
+    idProvince: number;
+    id_quyhoach: number;
+    location: string;
+  }
+  
+  interface QuanHuyen {
+    id_huyen: number;
+    name_huyen: string;
+    quyhoach: QuyHoach[];
+  }
+  
+export  interface TinhQuyHoach {
+    id_tinh: number;
+    link_image: string;
+    name_tinh: string;
+    quan_huyen_1_tinh: QuanHuyen[];
+  }
+  
+  // Mảng trả về từ API
+
+  

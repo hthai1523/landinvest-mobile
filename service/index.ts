@@ -1,4 +1,6 @@
 import {
+    AuctionDetailResponse,
+    AuctionResponse,
     BoxInterface,
     Comment,
     Group,
@@ -209,11 +211,11 @@ export const fetchListHighestLocation = async (districtId: string) => {
 export const fetchFilteredAuctions = async (
     startTime: string,
     endTime: string,
-    startPrice: number,
-    endPrice: number,
+    startPrice: string,
+    endPrice: string,
     province: string,
-    district: string,
-) => {
+    district: string | null,
+) : Promise<AuctionResponse[]> => {
     const params = {
         StartTime: startTime,
         EndTime: endTime,
@@ -226,9 +228,9 @@ export const fetchFilteredAuctions = async (
     return response.data;
 };
 
-export const fetchAuctionInfor = async (LandAuctionID: string) => {
+export const fetchAuctionInfor = async (LandAuctionID: string) : Promise<AuctionDetailResponse> => {
     const response = await instance.get(`/api/landauctions/view/${LandAuctionID}`);
-    return response.data;
+    return response.data[0];
 };
 
 export const fetchOrganization = async (): Promise<{
@@ -348,14 +350,14 @@ export const ViewlistComment = async (
 
 export const CreateComment = async (
     PostID: string,
-    Content: string,
-    Images: string[],
+    formData: any,
 ): Promise<{ Status: number; data: Comment; message: string }> => {
-    const payload = {
-        Content,
-        Images,
-    };
-    const { data } = await instance.post(`/api/post/add_comment/${PostID}`, payload);
+    const { data } = await instance.post(`/api/post/add_comment/${PostID}`, formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    });
+
     return data;
 };
 

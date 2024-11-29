@@ -14,7 +14,7 @@ import axios from 'axios';
 import removeAccents from 'remove-accents';
 import { Divider } from '@rneui/themed';
 import { LocationData } from '@/constants/interface';
-import useMarkerStore from '@/store/quyhoachStore';
+import useQuyHoachStore from '@/store/quyhoachStore';
 import selectFilteredMarkers from '@/store/filterSelectors';
 import useFilterStore from '@/store/filterStore';
 import CustomCalloutView from './CustomCalloutView';
@@ -59,29 +59,20 @@ const Map = ({ opacity, lat, lon, setLocationInfo, locationInfo }: MapInterface)
     const [latLon, setLatLon] = useState<{ lat: number; lon: number }>();
     const [quyhoachIds, setQuyhoachIds] = useState<number[]>([]);
 
-    const listMarker = useMarkerStore((state) => state.listMarkers);
     const doSetDistrictId = useSearchStore((state) => state.doSetDistrictId);
     const selectedIdDistrict = useSearchStore((state) => state.districtId);
-    const doSetListMarkers = useMarkerStore((state) => state.doSetListMarkers);
     const coordinates = useSearchStore((state) => state.coordinates);
+
+    const listMarker = useQuyHoachStore((state) => state.listMarkers);
+    const doSetListMarkers = useQuyHoachStore((state) => state.doSetListMarkers);
+    const listIdQuyHoach = useQuyHoachStore((state) => state.listIdQuyHoach)
+    const boundingboxQuyHoach = useQuyHoachStore((state) => state.boundingboxQuyHoach)
+
     const isLoggedIn = useAuthStore((state) => state.isAuthenticated);
     const { getAllFilter } = useFilterStore((state) => ({
         getAllFilter: state.getAllFilters,
     }));
     let filters = getAllFilter();
-    
-
-    const { quyhoach, vitri } = useLocalSearchParams<{
-        quyhoach?: string;
-        vitri?: string;
-    }>();
-    useEffect(() => {
-        const newQuyhoachIds = quyhoach?.split(',').map((id) => parseInt(id, 10)) || [];
-
-        setQuyhoachIds(newQuyhoachIds);
-    }, [quyhoach]);
-    // console.log(quyhoach, typeof vitri);
-
     const [location, setLocation] = useState({
         latitude: 21.16972,
         longitude: 105.84944,
@@ -93,6 +84,21 @@ const Map = ({ opacity, lat, lon, setLocationInfo, locationInfo }: MapInterface)
         latitudeDelta: 0.1,
         longitudeDelta: 0.1,
     });
+
+    useEffect(() => {
+        const quyhoachIds = listIdQuyHoach
+        .filter((key) => key?.startsWith('plan-'))
+        .map((key) => key?.split('-')[1])
+        .filter((id) => id != null);
+
+        const newQuyhoachIds = quyhoachIds.map((id) => parseInt(id, 10)) || [];
+
+        setQuyhoachIds(newQuyhoachIds);
+        // boundingboxQuyHoach ? moveToLocation(boundingboxQuyHoach?.lat, boundingboxQuyHoach?.lon) : moveToLocation(location.latitude, location.longitude)
+    }, [listIdQuyHoach]);
+
+
+ 
 
     const moveToLocation = useCallback(
         (latitude: number, longitude: number) => {
@@ -219,7 +225,7 @@ const Map = ({ opacity, lat, lon, setLocationInfo, locationInfo }: MapInterface)
             if (selectedIdDistrict) {
                 try {
                     const { data } = await axios.get(
-                        `https://apilandinvest.gachmen.org/quyhoach1quan/${selectedIdDistrict}`,
+                        `https://api.quyhoach.xyz/quyhoach1quan/${selectedIdDistrict}`,
                     );
                     if (data && data.length > 0) {
                         setSelectedIDQuyHoach(data[0]?.id);
@@ -241,7 +247,7 @@ const Map = ({ opacity, lat, lon, setLocationInfo, locationInfo }: MapInterface)
                 if (!districtName) return;
                 const apiName = removeAccents(districtName.toLowerCase());
                 const { data } = await axios.get(
-                    `https://apilandinvest.gachmen.org/quyhoach/search/${apiName}`,
+                    `https://api.quyhoach.xyz/quyhoach/search/${apiName}`,
                 );
 
                 doSetDistrictId(data.Posts[0].idDistrict);
@@ -257,6 +263,10 @@ const Map = ({ opacity, lat, lon, setLocationInfo, locationInfo }: MapInterface)
         if (lat !== 0 && lon !== 0) {
             setLocation({ latitude: lat, longitude: lon });
         }
+        // if(vitri) {
+        //     const [lat, lon] = vitri.split(',');
+        //     setLocation({ latitude: parseFloat(lat), longitude: parseFloat(lon) });
+        // }
     }, [lat, lon]);
 
     useEffect(() => {
@@ -284,7 +294,7 @@ const Map = ({ opacity, lat, lon, setLocationInfo, locationInfo }: MapInterface)
                     setLocationInfo(data as LocationData);
                     const apiName = removeAccents(districtName.toLowerCase());
                     const response = await axios.get(
-                        `https://apilandinvest.gachmen.org/quyhoach/search/${apiName}`,
+                        `https://api.quyhoach.xyz/quyhoach/search/${apiName}`,
                     );
                     const newDistrictId = response.data.Posts[0]?.idDistrict;
                     setIdDistrictForMarker(newDistrictId || null);
@@ -303,7 +313,7 @@ const Map = ({ opacity, lat, lon, setLocationInfo, locationInfo }: MapInterface)
         const fetchData = async () => {
             try {
                 const { data } = await axios.get(
-                    `https://apilandinvest.gachmen.org/api/location/list_info_by_district/${idDistrictForMarker}`,
+                    `https://api.quyhoach.xyz/api/location/list_info_by_district/${idDistrictForMarker}`,
                 );
                 doSetListMarkers(data.data || null);
             } catch (error) {
@@ -398,18 +408,17 @@ const Map = ({ opacity, lat, lon, setLocationInfo, locationInfo }: MapInterface)
 
                 {selectedIDQuyHoach && (
                     <UrlTile
-                        urlTemplate={`https://apilandinvest.gachmen.org/get_api_quyhoach/${selectedIDQuyHoach}/{z}/{x}/{y}`}
+                        urlTemplate={`https://api.quyhoach.xyz/get_api_quyhoach/${selectedIDQuyHoach}/{z}/{x}/{y}`}
                         maximumZ={22}
                         opacity={opacity}
                     />
                 )}
 
-                {quyhoachIds &&
-                    quyhoachIds.length > 0 &&
+                {
                     quyhoachIds.map((item, index) => (
                         <UrlTile
                             key={index}
-                            urlTemplate={`https://apilandinvest.gachmen.org/get_api_quyhoach/${item}/{z}/{x}/{y}`}
+                            urlTemplate={`https://api.quyhoach.xyz/get_api_quyhoach/${item}/{z}/{x}/{y}`}
                             maximumZ={22}
                             opacity={opacity}
                         />

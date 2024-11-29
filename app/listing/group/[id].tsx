@@ -60,7 +60,7 @@ const Page = () => {
     const { dismiss } = useBottomSheetModal();
     const sheetRef = useRef<BottomSheetModal>(null);
     const sheetAddPeopleRef = useRef<BottomSheetModal>(null);
-
+    const insets = useSafeAreaInsets();
     const scrollHandler = useAnimatedScrollHandler((event) => {
         scrollY.value = event.contentOffset.y;
     });
@@ -181,10 +181,12 @@ const Page = () => {
                     headerAnimatedStyle,
                     {
                         position: 'absolute',
+                        paddingTop: insets.top,
                         top: 0,
                         left: 0,
                         right: 0,
                         zIndex: 1,
+                        height: 72
                     },
                 ]}
             >

@@ -44,6 +44,7 @@ const BottomSheetCallout = forwardRef<Ref, BottomSheetCalloutProps>(({ dismiss, 
                 snapPoints={snapPoints}
                 index={1}
                 onDismiss={dismiss}
+                enableContentPanningGesture={false}
             >
                 <ScrollView className="space-y-2" scrollEnabled={true}>
                     <View className="px-4 space-y-2">

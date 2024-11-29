@@ -87,7 +87,7 @@ const MapPreview = ({ opacity, lat, lon, coordinates }: MapInterface) => {
       if (selectedIdDistrict) {
         try {
           const { data } = await axios.get(
-            `https://apilandinvest.gachmen.org/quyhoach1quan/${selectedIdDistrict}`,
+            `https://api.quyhoach.xyz/quyhoach1quan/${selectedIdDistrict}`,
           );
           if (data && data.length > 0) {
             setSelectedIDQuyHoach(data[0]?.id);
@@ -108,7 +108,7 @@ const MapPreview = ({ opacity, lat, lon, coordinates }: MapInterface) => {
       try {
         if (!districtName) return;
         const apiName = removeAccents(districtName.toLowerCase());
-        const { data } = await axios.get(`https://apilandinvest.gachmen.org/quyhoach/search/${apiName}`);
+        const { data } = await axios.get(`https://api.quyhoach.xyz/quyhoach/search/${apiName}`);
         setSelectedIdDistrict(data.Posts[0].idDistrict);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -159,7 +159,7 @@ const MapPreview = ({ opacity, lat, lon, coordinates }: MapInterface) => {
 
       {selectedIDQuyHoach && (
         <UrlTile
-          urlTemplate={`https://apilandinvest.gachmen.org/get_api_quyhoach/${selectedIDQuyHoach}/{z}/{x}/{y}`}
+          urlTemplate={`https://api.quyhoach.xyz/get_api_quyhoach/${selectedIDQuyHoach}/{z}/{x}/{y}`}
           maximumZ={22}
           opacity={opacity}
         />

@@ -41,7 +41,9 @@ const Search = () => {
                         }).toString()}`,
                     );
 
-                    const filteredData = data.filter((item: PlaceResult) => item.geojson?.type === 'Polygon');
+                    const filteredData = data.filter(
+                        (item: PlaceResult) => item.geojson?.type === 'Polygon',
+                    );
                     setSearchResult(filteredData);
                 } catch (error) {
                     console.error('Error fetching data:', error);
@@ -77,8 +79,12 @@ const Search = () => {
     }, []);
 
     const closePreview = () => {
+        console.log('abccccc');
+
         setPreviewItem(null);
     };
+    console.log('preview', previewItem);
+
     const renderSearchResult = useCallback(
         ({ item }: { item: PlaceResult }) => (
             <TouchableOpacity
@@ -96,10 +102,11 @@ const Search = () => {
     );
 
     return (
-        <SafeAreaView style={{ flex: 1, position: 'relative', backgroundColor: Colors.primary.background }}>
-            
+        <SafeAreaView
+            style={{ flex: 1, position: 'relative', backgroundColor: Colors.primary.background }}
+        >
             <View>
-                {true ? (
+                {isLoading ? (
                     <LinearProgress
                         color={Colors.primary.green}
                         style={{ position: 'absolute', top: 0 }}
@@ -114,10 +121,11 @@ const Search = () => {
                         keyboardDismissMode="on-drag"
                         ListEmptyComponent={
                             searchResult && searchResult.length > 0 ? (
-                                <Text style={{ textAlign: 'center', color: '#fff' }}>No results found</Text>
+                                <Text style={{ textAlign: 'center', color: '#fff' }}>
+                                    No results found
+                                </Text>
                             ) : null
                         }
-                        
                     />
                 )}
             </View>
@@ -138,7 +146,7 @@ const Search = () => {
                     />
                     <Modal
                         hasBackdrop={true}
-                        backdropOpacity={0}
+                        backdropOpacity={0.5} 
                         hideModalContentWhileAnimating={true}
                         animationIn={'fadeInUp'}
                         animationOut={'fadeOutDown'}
@@ -146,10 +154,8 @@ const Search = () => {
                         useNativeDriver={true}
                         animationInTiming={300}
                         animationOutTiming={300}
-                        // backdropTransitionInTiming={1}
-                        // backdropTransitionOutTiming={1}
-                        isVisible={true}
-                        onBackdropPress={closePreview}
+                        isVisible={!!previewItem}
+                        onBackdropPress={closePreview} // Gọi hàm closePreview khi nhấn vào backdrop
                     >
                         <View
                             style={{

@@ -24,7 +24,7 @@ export function Header() {
         if (!isLoggedIn && !isGroupRoute) {
             return (
                 <TouchableOpacity
-                    className={`bg-[${Colors.primary.green}] px-3 py-2 rounded mr-3`}
+                    className={`bg-[${Colors.primary.green}] px-3 py-2 rounded mr-3 `}
                     onPress={() => router.push('/(modals)/search')}
                 >
                     <Octicons name="search" size={20} color="#fff" />
@@ -35,7 +35,7 @@ export function Header() {
         if (isProfileRoute) {
             return (
                 <TouchableOpacity
-                    className={`bg-[${Colors.primary.green}] px-3 py-2 rounded mr-3`}
+                    className={`bg-[${Colors.primary.green}] px-3 py-2 rounded mr-3 `}
                     onPress={() => router.push('/(modals)/setting')}
                 >
                     <Octicons name="gear" size={20} color="#fff" />
@@ -46,7 +46,7 @@ export function Header() {
         if (isGroupRoute) {
             return (
                 <TouchableOpacity
-                    className={`bg-[${Colors.primary.green}] px-3 py-2 rounded mr-3`}
+                    className={`bg-[${Colors.primary.green}] px-3 py-2 rounded mr-3 `}
                     onPress={() => router.push('/(modals)/groupSetting')}
                 >
                     <Octicons name="gear" size={20} color="#fff" />
@@ -56,7 +56,7 @@ export function Header() {
 
         return (
             <TouchableOpacity
-                className={`bg-[${Colors.primary.green}] px-3 py-2 rounded mr-3`}
+                className={`bg-[${Colors.primary.green}] px-3 py-2 rounded mr-3 `}
                 onPress={() => router.push('/(modals)/search')}
             >
                 <Octicons name="search" size={20} color="#fff" />
@@ -70,14 +70,14 @@ export function Header() {
             style={{
                 paddingTop: insets.top,
                 paddingBottom: 8,
-                paddingHorizontal: 16, 
+                height: 72,
                 backgroundColor: Colors.primary.header,
                 flexDirection: 'row',
                 justifyContent: 'space-between',
                 alignItems: 'center'
             }}
         >
-            <Pressable style={{ marginBottom: 4, marginLeft: 12}} onPress={() => router.navigate('/(tabs)/')}>
+            <Pressable style={{marginLeft: 12}} onPress={() => router.navigate('/(tabs)/')}>
                 <Image source={require('@/assets/images/logo.png')} />
             </Pressable>
 

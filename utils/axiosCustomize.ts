@@ -3,7 +3,7 @@ import useAuthStore from '@/store/authStore';
 import { router } from 'expo-router';
 
 const instance = axios.create({
-    baseURL: `https://apilandinvest.gachmen.org`,
+    baseURL: `https://api.quyhoach.xyz`,
    
 });
 

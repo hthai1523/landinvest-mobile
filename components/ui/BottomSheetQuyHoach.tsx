@@ -1,22 +1,13 @@
-import { View, Text, ScrollView, FlatList, Platform } from 'react-native';
+import { View, Text, ScrollView, Platform } from 'react-native';
 import React, { forwardRef, memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { BottomSheetBackdrop, BottomSheetModal } from '@gorhom/bottom-sheet';
-import Checkbox from './Checkbox';
-import useFilterStore from '@/store/filterStore';
-import { TouchableOpacity } from 'react-native-gesture-handler';
-import useSearchStore from '@/store/searchStore';
 import axios from 'axios';
-import { QuyHoachResponse } from '@/constants/interface';
-import QuyHoachSection from '../BottomSheetQuyHoach/QuyHoachSection';
-import { fetchAllProvince, fetchDistrictsByProvinces } from '@/service';
-import TreeSelector from './TreeSelector';
-import { TreeDataTypes, TreeSelect } from 'react-native-tree-selection';
+import { TinhQuyHoach } from '@/constants/interface';
 import { TreeView, type TreeNode, type TreeViewRef } from 'react-native-tree-multi-select';
 import { SearchBar } from '@rneui/themed';
 import { Ionicons } from '@expo/vector-icons';
-import { useDebounce } from 'use-debounce';
+import useQuyHoachStore from '@/store/quyhoachStore';
 import { getBoundingBoxCenterFromString } from '@/functions/getBoundingBoxCenterFromString';
-import { router, useLocalSearchParams } from 'expo-router';
 
 export type Ref = BottomSheetModal;
 
@@ -31,130 +22,87 @@ const BottomSheetQuyHoach = forwardRef<Ref, { dismiss: () => void }>((props, ref
 
     const [loading, setLoading] = useState<boolean>(false);
     const [treeData, setTreeData] = useState<TreeNode[]>([]);
-    const [originalTreeData, setOriginalTreeData] = useState<TreeNode[]>([]);
     const treeViewRef = React.useRef<TreeViewRef | null>(null);
     const [search, setSearch] = useState<string>('');
-    const [checkedKeys, setCheckedKeys] = useState<string[]>([]);
-
+    const [listQuyHoach, setListQuyHoach] = useState<TinhQuyHoach[]>([]);
     const updateSearch = (value: string) => {
         setSearch(value);
         treeViewRef.current?.setSearchText(value, ['name']);
     };
 
-    const { quyhoach, vitri } = useLocalSearchParams<{
-        quyhoach?: string;
-        vitri?: string;
-    }>();
+    const doSetListIdQuyHoach = useQuyHoachStore.getState().doSetListIdQuyHoach;
+    const doSetBoundingboxQuyHoach = useQuyHoachStore.getState().doSetBoundingboxQuyHoach;
+    const listIdQuyHoach = useQuyHoachStore.getState().listIdQuyHoach;
+
+    const preselectedIds = useMemo(() => [...listIdQuyHoach], [listIdQuyHoach]);
 
     useEffect(() => {
-        fetchProvinces();
-        if (quyhoach) {
-            const quyhoachKeys = quyhoach.split(',').map((id) => `plan-${id}`);
-            setCheckedKeys(quyhoachKeys);
-        }
-    }, []);
-
-    const fetchProvinces = useCallback(async () => {
-        try {
-            setLoading(true);
-            const provinces = await fetchAllProvince();
-            const provincesData = await Promise.all(
-                provinces.map(async (province) => {
-                    const districts = await fetchDistricts(province.TinhThanhPhoID);
-                    if (districts.length > 0) {
-                        return {
-                            name: province.TenTinhThanhPho,
-                            id: `province-${province.TinhThanhPhoID}`,
-                            children: districts,
-                        };
-                    }
-                    return null;
-                }),
-            );
-            const filteredProvincesData = provincesData.filter((province) => province !== null);
-            setTreeData(filteredProvincesData);
-            setOriginalTreeData(filteredProvincesData);
-        } catch (error) {
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    const fetchDistricts = useCallback(async (provinceId: number) => {
-        try {
-            const districts = await fetchDistrictsByProvinces(provinceId);
-            const districtDataWithPlanning = await Promise.all(
-                districts.map(async (district) => {
-                    const planningData = await fetchPlanningData(district.DistrictID);
-                    if (planningData.length > 0) {
-                        return {
-                            name: district.DistrictName,
-                            id: `district-${district.DistrictID}`,
-                            children: planningData,
-                        };
-                    }
-                    return null;
-                }),
-            );
-            return districtDataWithPlanning.filter((district) => district !== null);
-        } catch (error) {
-            return [];
-        }
-    }, []);
-
-    const fetchPlanningData = useCallback(async (districtId: number) => {
-        try {
-            const { data } = await axios.get<QuyHoachResponse[]>(
-                `https://apilandinvest.gachmen.org/quyhoach1quan/${districtId}`,
-            );
-            if (Array.isArray(data) && data.length > 0) {
-                return data.map((plan) => ({
-                    name: plan.description,
-                    id: `plan-${plan.id}`,
-                }));
-            }
-            return [];
-        } catch (error) {
-            return [];
-        }
-    }, []);
-
-    const handleSelect = useCallback(async (checkedKeysValue: string[]) => {
-        if (!Array.isArray(checkedKeysValue)) return;
-        console.log('checkedkeyvalue', checkedKeysValue);
-
-        const quyhoachIds = checkedKeysValue
-            .filter((key) => key?.startsWith('plan-'))
-            .map((key) => key?.split('-')[1])
-            .filter((id) => id != null);
-        const districtIds = checkedKeysValue
-            .filter((key) => key?.startsWith('district-'))
-            .map((key) => key?.split('-')[1])
-            .filter((id) => id != null);
-
-        if (districtIds.length > 0 && quyhoachIds.length > 0) {
-            const id = districtIds[districtIds.length - 1];
-
+        const fetchQuyHoach = async () => {
             try {
-                const { data } = await axios.get(
-                    `https://apilandinvest.gachmen.org/quyhoach1quan/${id}`,
+                const response = await axios.get(
+                    'https://api.quyhoach.xyz/sap_xep_tinh_quan_huyen',
                 );
-                const { centerLatitude, centerLongitude } = getBoundingBoxCenterFromString(
-                    data[0]?.boundingbox,
-                );
-                router.setParams({
-                    quyhoach: quyhoachIds.toString(),
-                    vitri: `${centerLatitude},${centerLongitude}`,
-                });
+                const data = response.data; 
+                if (Array.isArray(data) && data.length > 1) {
+                    setListQuyHoach(data[1]);
+                } 
             } catch (error) {
-                console.error(error);
+                console.log(error);
             }
-        }
+        };
+        fetchQuyHoach();
     }, []);
+
+    const dataSource = useMemo(() => {
+        return listQuyHoach.map((tinh: any) => ({
+            name: tinh.name_tinh,
+            id: `province-${tinh.id_tinh}`,
+            children: tinh.quan_huyen_1_tinh.map((huyen: any) => ({
+                name: huyen.name_huyen,
+                id: `district-${huyen.id_huyen}`,
+                children: huyen.quyhoach.map((quyhoach: any) => ({
+                    id: `plan-${quyhoach.id_quyhoach}`,
+                    name: quyhoach.description,
+                })),
+            })),
+        }));
+    }, [listQuyHoach]);
+
+    useEffect(() => {
+        setTreeData(dataSource.slice(16, 26));
+    }, [dataSource]);
+
+    const handleSelect = async (checkedKeysValue: string[]) => {
+        if (!Array.isArray(checkedKeysValue)) return;
+        console.log('checkedkeyvalue', checkedKeysValue);   
+        doSetListIdQuyHoach(checkedKeysValue);    
+
+        // const districtIds = checkedKeysValue
+        // .filter((key) => key?.startsWith('district-'))
+        // .map((key) => key?.split('-')[1])
+        // .filter((id) => id != null);
+
+
+        // if (districtIds.length > 0) {
+        //     const id = districtIds[districtIds.length - 1];
+
+        //     try {
+        //         const { data } = await axios.get(
+        //             `https://api.quyhoach.xyz/quyhoach1quan/${id}`,
+        //         );
+        //         const { centerLatitude, centerLongitude } = getBoundingBoxCenterFromString(
+        //             data[0]?.boundingbox,
+        //         );
+        //        doSetBoundingboxQuyHoach(centerLatitude, centerLongitude)
+        //     } catch (error) {
+        //         console.error(error);
+        //     }
+        // }
+    };
 
     const handleResetSearch = () => {
         setSearch('');
-        setTreeData(originalTreeData);
+        setTreeData(dataSource);
     };
 
     return (
@@ -164,6 +112,7 @@ const BottomSheetQuyHoach = forwardRef<Ref, { dismiss: () => void }>((props, ref
             snapPoints={snapPoints}
             index={1}
             onDismiss={props.dismiss}
+            enableContentPanningGesture={false}
         >
             <ScrollView className="flex-1">
                 {loading ? (
@@ -190,7 +139,6 @@ const BottomSheetQuyHoach = forwardRef<Ref, { dismiss: () => void }>((props, ref
                             clearIcon={
                                 <Ionicons name="close-circle-outline" size={24} color={'#333'} />
                             }
-                            // showLoading={isLoading}
                             showCancel={false}
                             onClear={() => handleResetSearch()}
                             onCancel={() => handleResetSearch()}
@@ -199,7 +147,6 @@ const BottomSheetQuyHoach = forwardRef<Ref, { dismiss: () => void }>((props, ref
                             ref={treeViewRef}
                             data={treeData}
                             onCheck={handleSelect}
-                            preselectedIds={checkedKeys}
                         />
                     </>
                 )}

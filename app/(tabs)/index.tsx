@@ -30,7 +30,6 @@ const Page = () => {
     const max = useSharedValue(1);
 
     const { lat, lon } = useSearchStore((state) => state);
-
     
 
     const openBottomSheet = useCallback(() => {
@@ -116,7 +115,7 @@ const Page = () => {
 
 
             <BottomSheet dismiss={dismiss} ref={sheetRef} />
-            {/* <BottomSheetQuyHoach dismiss={handleBottomSheetQuyHoachDismiss} ref={sheetQuyHoachRef} /> */}
+            <BottomSheetQuyHoach dismiss={handleBottomSheetQuyHoachDismiss} ref={sheetQuyHoachRef} />
         </View>
     );
 };

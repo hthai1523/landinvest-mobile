@@ -36,6 +36,8 @@ const PostsReaded = () => {
             renderItem={({ item }) => <PostProfileSection post={item} />}
             keyExtractor={(item, index) => item.PostID.toString() + index}
             scrollEnabled={false}
+            contentContainerStyle={{ padding: 12 }}
+            ListEmptyComponent={() => <Text className='text-white text-center font-normal'>Bạn chưa xem bài viết nào</Text>}
         />
     );
 };
